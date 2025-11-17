@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image, Video & Audio Models 2025 | Comprehensive Showcase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0f;
+            color: #e4e4e7;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a1a1aa;
+            margin-bottom: 40px;
+        }
+
+        .search-container {
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            color: #71717a;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 50px 16px 50px;
+            background: #18181b;
+            border: 2px solid #27272a;
+            border-radius: 12px;
+            color: #e4e4e7;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #71717a;
+        }
+
+        .clear-search {
+            position: absolute;
+            right: 14px;
+            background: #27272a;
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #a1a1aa;
+        }
+
+        .clear-search:hover {
+            background: #3f3f46;
+            color: #e4e4e7;
+        }
+
+        .search-results-count {
+            margin-top: 12px;
+            text-align: center;
+            color: #a1a1aa;
+            font-size: 0.9rem;
+        }
+
+        .filters-container {
+            margin-bottom: 50px;
+        }
+
+        .filter-group {
+            margin-bottom: 30px;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: #18181b;
+            border: 1px solid #27272a;
+            color: #a1a1aa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #e4e4e7;
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: white;
+        }
+
+        .category-section {
+            margin-bottom: 60px;
+        }
+
+        .category-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #fafafa;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .category-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+        }
+
+        .model-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .model-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .model-card:hover::before {
+            opacity: 1;
+        }
+
+        .model-header {
+            margin-bottom: 20px;
+        }
+
+        .model-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fafafa;
+            margin-bottom: 8px;
+        }
+
+        .model-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .meta-tag {
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            background: #27272a;
+            border-radius: 6px;
+            color: #a1a1aa;
+        }
+
+        .pricing-tag {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            color: #a5b4fc;
+            font-weight: 600;
+        }
+
+        .developer {
+            color: #667eea;
+        }
+
+        .release-date {
+            color: #a1a1aa;
+        }
+
+        .model-description {
+            color: #a1a1aa;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .features-section {
+            margin-top: 20px;
+        }
+
+        .features-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #a1a1aa;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #a5b4fc;
+            transition: all 0.2s ease;
+        }
+
+        .tag:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(1.05);
+        }
+
+        .highlight-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+            border-top: 1px solid #27272a;
+            color: #71717a;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .models-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .category-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 50px;
+            padding: 30px;
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #a1a1aa;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Generation Models 2025</h1>
+            <p class="subtitle">Image, Video & Audio Generation Models with Advanced Features</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">27</div>
+                <div class="stat-label">Total Models</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">9</div>
+                <div class="stat-label">Image Models</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">14</div>
+                <div class="stat-label">Video Models</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Audio Models</div>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <div class="search-wrapper">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input
+                    type="text"
+                    id="searchInput"
+                    class="search-input"
+                    placeholder="Search models by name, developer, or features..."
+                    autocomplete="off"
+                />
+                <button class="clear-search" id="clearSearch" style="display: none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="search-results-count" id="searchResultsCount"></div>
+        </div>
+
+        <div class="filters-container">
+            <div class="filter-group">
+                <div class="filter-label">Model Type</div>
+                <div class="filters">
+                    <button class="filter-btn" data-filter="image">Image</button>
+                    <button class="filter-btn" data-filter="video">Video</button>
+                    <button class="filter-btn" data-filter="audio">Audio</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-label">Features</div>
+                <div class="filters">
+                    <button class="filter-btn" data-filter="consistency">Character Consistency</button>
+                    <button class="filter-btn" data-filter="editing">Editing</button>
+                    <button class="filter-btn" data-filter="realistic">Photorealistic</button>
+                    <button class="filter-btn" data-filter="camera-control">Camera Control</button>
+                    <button class="filter-btn" data-filter="fast">Fast Generation</button>
+                    <button class="filter-btn" data-filter="opensource">Open Source</button>
+                    <button class="filter-btn" data-filter="professional">Professional</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- IMAGE MODELS SECTION -->
+        <section class="category-section" data-category="image">
+            <h2 class="category-title">
+                <span class="category-icon">🎨</span>
+                Image Generation Models
+            </h2>
+            <div class="models-grid">
+
+                <!-- Nano Banana -->
+                <div class="model-card" data-tags="image editing realistic fast consistency">
+                    <div class="highlight-badge">Character Consistency</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Nano Banana</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Google</span>
+                            <span class="meta-tag release-date">August 2025</span>
+                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">$0.039/image</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Gemini 2.5 Flash Image - Google's latest model with exceptional character consistency across multiple edits and conversational editing capabilities.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Image</span>
+                            <span class="tag">Image Editing</span>
+                            <span class="tag">Character Consistency</span>
+                            <span class="tag">Face/Identity Preservation</span>
+                            <span class="tag">Multi-Image Fusion</span>
+                            <span class="tag">Natural Language</span>
+                            <span class="tag">Fast (9s avg)</span>
+                            <span class="tag">Lighting Preservation</span>
+                            <span class="tag">Background Replacement</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flux Kontext -->
+                <div class="model-card" data-tags="image editing professional precise realistic">
+                    <div class="highlight-badge">Professional Choice</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Flux 1.1 Kontext Max</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Black Forest Labs</span>
+                            <span class="meta-tag release-date">2025</span>
+                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">$0.04/generation</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Context-aware image generation and editing suite with exceptional precision and professional workflow support.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Image</span>
+                            <span class="tag">Context-Aware Editing</span>
+                            <span class="tag">Style Transfer</span>
+                            <span class="tag">Watermark Removal</span>
+                            <span class="tag">Relighting</span>
+                            <span class="tag">Fast (7s avg)</span>
+                            <span class="tag">Iterative Workflow</span>
+                            <span class="tag">4MP Ultra Resolution</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Midjourney V7 -->
+                <div class="model-card" data-tags="image artistic creative aesthetic consistency">
+                    <div class="model-header">
+                        <h3 class="model-name">Midjourney V7</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Midjourney</span>
+                            <span class="meta-tag release-date">April 2025</span>
+                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">From $10/mo</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Complete architectural redesign with improved aesthetics, better body/hand coherence, and character reference features for maintaining consistent characters. Plans: Basic ($10/mo), Standard ($30/mo), Pro ($60/mo), Mega ($120/mo).
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Image</span>
+                            <span class="tag">Unique Aesthetics</span>
+                            <span class="tag">Character Reference (cref)</span>
+                            <span class="tag">Draft Mode (10x speed)</span>
+                            <span class="tag">Body/Hand Coherence</span>
+                            <span class="tag">Personalization</span>
+                            <span class="tag">Style Explorer</span>
+                            <span class="tag">Enhanced Textures</span>
+                            <span class="tag">Image Prompts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAI-Image-1 -->
+                <div class="model-card" data-tags="image realistic fast microsoft">
+                    <div class="highlight-badge">New Release</div>
+                    <div class="model-header">
+                        <h3 class="model-name">MAI-Image-1</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Microsoft</span>
+                            <span class="meta-tag release-date">November 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Microsoft's first proprietary image generator excelling in food photography, natural scenes, and lighting effects.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Image</span>
+                            <span class="tag">Food Photography</span>
+                            <span class="tag">Natural Scenes</span>
+                            <span class="tag">Lighting Effects</span>
+                            <span class="tag">Bing Integration</span>
+                            <span class="tag">Copilot Integration</span>
+                            <span class="tag">Speed Optimized</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adobe Firefly Image Model 5 -->
+                <div class="model-card" data-tags="image realistic professional editing">
+                    <div class="model-header">
+                        <h3 class="model-name">Adobe Firefly Image Model 5</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Adobe</span>
+                            <span class="meta-tag release-date">October 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Studio-quality photorealistic image generation with native 4MP resolution and ecosystem integration.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">4MP Native Resolution</span>
+                            <span class="tag">Photorealistic</span>
+                            <span class="tag">Natural Language Editing</span>
+                            <span class="tag">Custom Models</span>
+                            <span class="tag">Partner Ecosystem</span>
+                            <span class="tag">Studio Quality</span>
+                            <span class="tag">Commercial Safe</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GPT-4o Image -->
+                <div class="model-card" data-tags="image realistic text professional">
+                    <div class="model-header">
+                        <h3 class="model-name">GPT-4o Image Generation</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">OpenAI</span>
+                            <span class="meta-tag release-date">March 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Autoregressive architecture with exceptional text rendering and native multimodal capabilities.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Image</span>
+                            <span class="tag">Exceptional Text Rendering</span>
+                            <span class="tag">Prompt Adherence</span>
+                            <span class="tag">Multimodal Native</span>
+                            <span class="tag">Context Awareness</span>
+                            <span class="tag">ChatGPT Integration</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reve Image -->
+                <div class="model-card" data-tags="image realistic precise">
+                    <div class="model-header">
+                        <h3 class="model-name">Reve Image</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Various</span>
+                            <span class="meta-tag release-date">March 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Best-in-class prompt adherence with exceptional handling of complex multi-element compositions.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Image</span>
+                            <span class="tag">Best Prompt Adherence</span>
+                            <span class="tag">Complex Compositions</span>
+                            <span class="tag">Multi-Element Handling</span>
+                            <span class="tag">High Detail</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ideogram 3.0 -->
+                <div class="model-card" data-tags="image text design realistic">
+                    <div class="model-header">
+                        <h3 class="model-name">Ideogram 3.0</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Ideogram</span>
+                            <span class="meta-tag release-date">2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Enhanced photorealism with exceptional text rendering and style reference system supporting multiple guide images.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Image</span>
+                            <span class="tag">Text Rendering Excellence</span>
+                            <span class="tag">Style Reference (3 images)</span>
+                            <span class="tag">Photorealism</span>
+                            <span class="tag">Canvas Editor</span>
+                            <span class="tag">Batch Generation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imagen 4 -->
+                <div class="model-card" data-tags="image realistic text google">
+                    <div class="model-header">
+                        <h3 class="model-name">Imagen 4</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Google</span>
+                            <span class="meta-tag release-date">2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Google's diffusion-based model with sharp visuals, accurate text rendering, and multiple style support.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Image</span>
+                            <span class="tag">Sharp Visuals</span>
+                            <span class="tag">Text Rendering</span>
+                            <span class="tag">Multiple Styles</span>
+                            <span class="tag">Improved Realism</span>
+                            <span class="tag">Graphic Generation</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- VIDEO MODELS SECTION -->
+        <section class="category-section" data-category="video">
+            <h2 class="category-title">
+                <span class="category-icon">🎬</span>
+                Video Generation Models
+            </h2>
+            <div class="models-grid">
+
+                <!-- Veo 3.1 -->
+                <div class="model-card" data-tags="video audio realistic editing multishot consistency">
+                    <div class="highlight-badge">Character Consistency</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Veo 3.1</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Google DeepMind</span>
+                            <span class="meta-tag release-date">October 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Enhanced creative control with native audio generation, multi-shot sequencing, and character consistency across scenes for powerful video storytelling.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Native Audio Generation</span>
+                            <span class="tag">Multi-Shot Sequencing</span>
+                            <span class="tag">Character Consistency</span>
+                            <span class="tag">Prevents Feature Changes</span>
+                            <span class="tag">Scene Extension</span>
+                            <span class="tag">Precise Editing</span>
+                            <span class="tag">Object Add/Remove</span>
+                            <span class="tag">Flow Integration</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Veo 3 Fast -->
+                <div class="model-card" data-tags="video audio fast youtube free">
+                    <div class="model-header">
+                        <h3 class="model-name">Veo 3 Fast</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Google DeepMind</span>
+                            <span class="meta-tag release-date">September 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Optimized for speed and integrated into YouTube Shorts, allowing free creation of video backgrounds and clips with sound.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Audio Sync</span>
+                            <span class="tag">YouTube Shorts Integration</span>
+                            <span class="tag">Free Access</span>
+                            <span class="tag">Motion Application</span>
+                            <span class="tag">Video Restyling</span>
+                            <span class="tag">Prop Addition</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sora 2 -->
+                <div class="model-card" data-tags="video realistic cinematic professional">
+                    <div class="highlight-badge">Photorealism Leader</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Sora 2</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">OpenAI</span>
+                            <span class="meta-tag release-date">2024-2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Industry-leading photorealistic video generation up to 1 minute with storyboard interface for sequential creation.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Hyper-Realistic</span>
+                            <span class="tag">Up to 1 Minute</span>
+                            <span class="tag">Storyboard Interface</span>
+                            <span class="tag">Cinematic B-Roll</span>
+                            <span class="tag">Sequential Creation</span>
+                            <span class="tag">High Resolution</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Runway Gen-4 -->
+                <div class="model-card" data-tags="video professional editing cinematic realistic camera-control">
+                    <div class="highlight-badge">Professional Grade</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Runway Gen-4</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Runway AI</span>
+                            <span class="meta-tag release-date">November 2024</span>
+                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">From $12/mo</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Most advanced Runway model with comprehensive professional controls for filmmakers and VFX artists, featuring advanced camera path controls and director's mode. Standard: $12/mo (625 credits), Pro: $28/mo (2250 credits), Unlimited: $95/mo.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Image-to-Video</span>
+                            <span class="tag">Video-to-Video</span>
+                            <span class="tag">Camera Path Controls</span>
+                            <span class="tag">Director's Mode</span>
+                            <span class="tag">Pan / Tilt / Rotate</span>
+                            <span class="tag">Zoom In/Out Control</span>
+                            <span class="tag">Camera Speed Control</span>
+                            <span class="tag">Lip-Sync</span>
+                            <span class="tag">Reference Conditioning</span>
+                            <span class="tag">24 FPS</span>
+                            <span class="tag">Shot Extension</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kling 2.1 -->
+                <div class="model-card" data-tags="video realistic physics long cinematic">
+                    <div class="model-header">
+                        <h3 class="model-name">Kling 2.1</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Kuaishou AI</span>
+                            <span class="meta-tag release-date">June 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        High-resolution video generation up to 2 minutes with realistic physics simulation and cinematic motion quality.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Image-to-Video</span>
+                            <span class="tag">1080p Resolution</span>
+                            <span class="tag">30 FPS</span>
+                            <span class="tag">Up to 2 Minutes</span>
+                            <span class="tag">Realistic Physics</span>
+                            <span class="tag">Dynamic Cameras</span>
+                            <span class="tag">Multi-Shot</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Luma Dream Machine -->
+                <div class="model-card" data-tags="video fast realistic accessible camera-control">
+                    <div class="highlight-badge">Camera Control</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Luma Dream Machine (Ray2)</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Luma AI</span>
+                            <span class="meta-tag release-date">2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Lightning-fast video generation with photorealistic motion, smooth transitions, and advanced camera angle concepts for precise cinematic framing control.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Image-to-Video</span>
+                            <span class="tag">Ultra Fast (120 frames/120s)</span>
+                            <span class="tag">720p Resolution</span>
+                            <span class="tag">24 FPS</span>
+                            <span class="tag">9 Camera Angle Concepts</span>
+                            <span class="tag">Low Angle / High Angle</span>
+                            <span class="tag">POV / Over Shoulder</span>
+                            <span class="tag">Aerial / Overhead</span>
+                            <span class="tag">Camera Motion Control</span>
+                            <span class="tag">Cinematic Movement</span>
+                            <span class="tag">Affordable Pricing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pika 2.1 -->
+                <div class="model-card" data-tags="video editing realistic social">
+                    <div class="model-header">
+                        <h3 class="model-name">Pika 2.1</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Pika Labs</span>
+                            <span class="meta-tag release-date">February 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        High-definition 1080p generation with groundbreaking "Pikadditions" for seamless object and character insertion.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Image-to-Video</span>
+                            <span class="tag">1080p HD</span>
+                            <span class="tag">Pikadditions</span>
+                            <span class="tag">Scene Integration</span>
+                            <span class="tag">Object Insertion</span>
+                            <span class="tag">Social Media Focus</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hailuo 02 -->
+                <div class="model-card" data-tags="video physics realistic dramatic">
+                    <div class="model-header">
+                        <h3 class="model-name">Hailuo 02</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">MiniMax</span>
+                            <span class="meta-tag release-date">2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        3x larger model with 4x more training data, excelling in realistic physics and complex body movements.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Realistic Physics</span>
+                            <span class="tag">Complex Motion</span>
+                            <span class="tag">Choreography</span>
+                            <span class="tag">Temporal Consistency</span>
+                            <span class="tag">High Prompt Accuracy</span>
+                            <span class="tag">Dramatic Content</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wan 2.2 -->
+                <div class="model-card" data-tags="video opensource cinematic">
+                    <div class="model-header">
+                        <h3 class="model-name">Wan 2.2</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Alibaba</span>
+                            <span class="meta-tag release-date">2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Open-source video generation with Mixture-of-Experts architecture and cinematic control for consumer GPUs.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Open Source</span>
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Image-to-Video</span>
+                            <span class="tag">720p @ 24fps</span>
+                            <span class="tag">MoE Architecture</span>
+                            <span class="tag">Consumer GPU</span>
+                            <span class="tag">Cinematic Control</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adobe Firefly Video Model -->
+                <div class="model-card" data-tags="video professional camera-control editing">
+                    <div class="highlight-badge">Creative Control</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Adobe Firefly Video Model</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Adobe</span>
+                            <span class="meta-tag release-date">February 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Professional video generation with advanced camera settings including angle, shot type, and motion control, plus keyframe support for precise creative direction.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Image-to-Video</span>
+                            <span class="tag">Camera Angle Control</span>
+                            <span class="tag">Shot Angle Settings</span>
+                            <span class="tag">Motion Control</span>
+                            <span class="tag">Keyframe Support</span>
+                            <span class="tag">Vertical/Horizontal</span>
+                            <span class="tag">Commercial Safe</span>
+                            <span class="tag">Creative Cloud Integration</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seedance 1.0 -->
+                <div class="model-card" data-tags="video realistic multishot consistency">
+                    <div class="model-header">
+                        <h3 class="model-name">Seedance 1.0</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">ByteDance</span>
+                            <span class="meta-tag release-date">2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        High-quality 1080p video generation with native multi-shot storytelling and strong character style consistency across sequences.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Image-to-Video</span>
+                            <span class="tag">1080p @ 24fps</span>
+                            <span class="tag">Multi-Shot Sequences</span>
+                            <span class="tag">Smooth Motion</span>
+                            <span class="tag">Character Consistency</span>
+                            <span class="tag">Style Preservation</span>
+                            <span class="tag">Camera Angle Switching</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mochi 1 -->
+                <div class="model-card" data-tags="video opensource">
+                    <div class="model-header">
+                        <h3 class="model-name">Mochi 1</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Genmo AI</span>
+                            <span class="meta-tag release-date">October 2024</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Open-source AI video generation model supporting community-driven development and experimentation.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Open Source</span>
+                            <span class="tag">Text-to-Video</span>
+                            <span class="tag">Community Driven</span>
+                            <span class="tag">Customizable</span>
+                            <span class="tag">Research Friendly</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stable Virtual Camera -->
+                <div class="model-card" data-tags="video camera-control 3d realistic">
+                    <div class="highlight-badge">3D Camera Control</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Stable Virtual Camera</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Stability AI</span>
+                            <span class="meta-tag release-date">March 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Transforms 2D images into immersive 3D videos with realistic depth and perspective, featuring 14 dynamic camera paths for cinematic control.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Image-to-3D Video</span>
+                            <span class="tag">Multi-View Diffusion</span>
+                            <span class="tag">360° Rotation</span>
+                            <span class="tag">Lemniscate Path</span>
+                            <span class="tag">Spiral Movement</span>
+                            <span class="tag">Dolly Zoom In/Out</span>
+                            <span class="tag">Pan Up/Down/Left/Right</span>
+                            <span class="tag">Roll Control</span>
+                            <span class="tag">User-Defined Trajectories</span>
+                            <span class="tag">1-32 Input Images</span>
+                            <span class="tag">Up to 1000 Frames</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Runway Aleph -->
+                <div class="model-card" data-tags="video editing camera-control professional realistic">
+                    <div class="highlight-badge">Advanced Editing</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Runway Aleph</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Runway AI</span>
+                            <span class="meta-tag release-date">October 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        State-of-the-art in-context video model for editing real footage with camera angle generation, object manipulation, relighting, and complex VFX work.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Real Footage Editing</span>
+                            <span class="tag">Camera Angle Generation</span>
+                            <span class="tag">Shot Continuation</span>
+                            <span class="tag">Style Transfer</span>
+                            <span class="tag">Environment Change</span>
+                            <span class="tag">Weather Alteration</span>
+                            <span class="tag">Object Add/Remove</span>
+                            <span class="tag">Character Appearance</span>
+                            <span class="tag">Relighting</span>
+                            <span class="tag">Green Screen Mattes</span>
+                            <span class="tag">Professional VFX</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- AUDIO MODELS SECTION -->
+        <section class="category-section" data-category="audio">
+            <h2 class="category-title">
+                <span class="category-icon">🎵</span>
+                Audio & Music Generation Models
+            </h2>
+            <div class="models-grid">
+
+                <!-- Lyria 2 -->
+                <div class="model-card" data-tags="audio music realtime interactive">
+                    <div class="highlight-badge">Real-Time</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Lyria 2 & Lyria RealTime</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Google DeepMind</span>
+                            <span class="meta-tag release-date">2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Real-time music generation with production-quality 48 kHz stereo audio and interactive jam session capabilities.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Real-Time Generation</span>
+                            <span class="tag">48 kHz Stereo</span>
+                            <span class="tag">Interactive Creation</span>
+                            <span class="tag">MusicFX DJ</span>
+                            <span class="tag">Multi-Player Jams</span>
+                            <span class="tag">YouTube Dream Track</span>
+                            <span class="tag">SynthID Watermarking</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suno v5 -->
+                <div class="model-card" data-tags="audio music vocals studio">
+                    <div class="highlight-badge">Studio Grade</div>
+                    <div class="model-header">
+                        <h3 class="model-name">Suno v5</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Suno</span>
+                            <span class="meta-tag release-date">September 2025</span>
+                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">From $10/mo</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Most advanced Suno model with studio-grade fidelity, natural vocals, and new composition architecture. Pro & Premier plans available.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Text-to-Music</span>
+                            <span class="tag">Studio-Grade Fidelity</span>
+                            <span class="tag">Natural Vocals</span>
+                            <span class="tag">Full Song Generation</span>
+                            <span class="tag">Lyrics Creation</span>
+                            <span class="tag">Personas (Style Memory)</span>
+                            <span class="tag">Stem Separation</span>
+                            <span class="tag">Song Extension</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eleven Music -->
+                <div class="model-card" data-tags="audio music vocals realistic">
+                    <div class="model-header">
+                        <h3 class="model-name">ElevenLabs Eleven Music</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">ElevenLabs</span>
+                            <span class="meta-tag release-date">August 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Industry-leading vocal synthesis integrated with full music generation for production-ready songs.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Custom Song Generation</span>
+                            <span class="tag">Best-in-Class Vocals</span>
+                            <span class="tag">Human-Like Synthesis</span>
+                            <span class="tag">Production Ready</span>
+                            <span class="tag">Strong Instrumentals</span>
+                            <span class="tag">Commercial Use</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Beatoven.ai Maestro -->
+                <div class="model-card" data-tags="audio music licensed ethical">
+                    <div class="model-header">
+                        <h3 class="model-name">Beatoven.ai Maestro</h3>
+                        <div class="model-meta">
+                            <span class="meta-tag developer">Beatoven.ai</span>
+                            <span class="meta-tag release-date">August 2025</span>
+                        </div>
+                    </div>
+                    <p class="model-description">
+                        Ethically trained on licensed music, compensating rights-holders while generating adaptive background music.
+                    </p>
+                    <div class="features-section">
+                        <h4 class="features-title">Key Features</h4>
+                        <div class="tags">
+                            <span class="tag">Licensed Training Data</span>
+                            <span class="tag">Artist Compensation</span>
+                            <span class="tag">Adaptive Music</span>
+                            <span class="tag">Content-Matched</span>
+                            <span class="tag">Background Scoring</span>
+                            <span class="tag">Royalty-Free</span>
+                            <span class="tag">Ethical AI</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>Last Updated: November 16, 2025 | Data compiled from official announcements and industry sources</p>
+        <p style="margin-top: 10px; font-size: 0.9rem;">Models continue to evolve rapidly. Check official sources for latest updates.</p>
+        <p style="margin-top: 8px; font-size: 0.85rem; color: #71717a;">Pricing shown is approximate and may vary. Please check official provider websites for current pricing.</p>
+    </footer>
+
+    <script>
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const modelCards = document.querySelectorAll('.model-card');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const searchResultsCount = document.getElementById('searchResultsCount');
+
+        let activeFilters = {
+            modelType: [], // image, video, audio
+            features: []   // editing, realistic, camera-control, etc.
+        };
+        let currentSearchTerm = '';
+
+        // Filter by button click
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const filterValue = button.getAttribute('data-filter');
+
+                // Determine which category this filter belongs to
+                const isModelType = ['image', 'video', 'audio'].includes(filterValue);
+                const category = isModelType ? 'modelType' : 'features';
+
+                // Toggle the filter
+                if (button.classList.contains('active')) {
+                    // Remove from active filters
+                    button.classList.remove('active');
+                    const index = activeFilters[category].indexOf(filterValue);
+                    if (index > -1) {
+                        activeFilters[category].splice(index, 1);
+                    }
+                } else {
+                    // Add to active filters
+                    button.classList.add('active');
+                    activeFilters[category].push(filterValue);
+                }
+
+                applyFilters();
+            });
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            currentSearchTerm = e.target.value.toLowerCase().trim();
+
+            // Show/hide clear button
+            if (currentSearchTerm) {
+                clearSearchBtn.style.display = 'flex';
+            } else {
+                clearSearchBtn.style.display = 'none';
+            }
+
+            applyFilters();
+        });
+
+        // Clear search
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            currentSearchTerm = '';
+            clearSearchBtn.style.display = 'none';
+            applyFilters();
+            searchInput.focus();
+        });
+
+        // Apply both filters and search
+        function applyFilters() {
+            let visibleCount = 0;
+
+            modelCards.forEach(card => {
+                const tags = card.getAttribute('data-tags') || '';
+                const modelName = card.querySelector('.model-name').textContent.toLowerCase();
+                const developer = card.querySelector('.developer')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.model-description')?.textContent.toLowerCase() || '';
+                const allTags = card.querySelectorAll('.tag');
+                let tagText = '';
+                allTags.forEach(tag => {
+                    tagText += tag.textContent.toLowerCase() + ' ';
+                });
+
+                // Check Model Type filter match
+                let modelTypeMatch = false;
+                if (activeFilters.modelType.length === 0) {
+                    // No model type selected = show all
+                    modelTypeMatch = true;
+                } else {
+                    // Check if card matches any selected model type
+                    modelTypeMatch = activeFilters.modelType.some(type => tags.includes(type));
+                }
+
+                // Check Features filter match
+                let featuresMatch = false;
+                if (activeFilters.features.length === 0) {
+                    // No features selected = show all
+                    featuresMatch = true;
+                } else {
+                    // Check if card matches all selected features (AND logic)
+                    featuresMatch = activeFilters.features.every(feature => tags.includes(feature));
+                }
+
+                // Check search match
+                let searchMatch = false;
+                if (!currentSearchTerm) {
+                    searchMatch = true;
+                } else {
+                    const searchableText = `${modelName} ${developer} ${description} ${tags} ${tagText}`;
+                    searchMatch = searchableText.includes(currentSearchTerm);
+                }
+
+                // Show/hide card based on all conditions
+                if (modelTypeMatch && featuresMatch && searchMatch) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update results count
+            updateResultsCount(visibleCount);
+        }
+
+        // Update search results count
+        function updateResultsCount(count) {
+            const hasActiveFilters = activeFilters.modelType.length > 0 || activeFilters.features.length > 0;
+
+            if (currentSearchTerm || hasActiveFilters) {
+                if (count === 0) {
+                    searchResultsCount.textContent = 'No models found';
+                    searchResultsCount.style.color = '#ef4444';
+                } else if (count === 1) {
+                    searchResultsCount.textContent = '1 model found';
+                    searchResultsCount.style.color = '#a1a1aa';
+                } else {
+                    searchResultsCount.textContent = `${count} models found`;
+                    searchResultsCount.style.color = '#a1a1aa';
+                }
+            } else {
+                searchResultsCount.textContent = '';
+            }
+        }
+
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Keyboard shortcut for search (Ctrl/Cmd + K)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+
+            // Escape to clear search
+            if (e.key === 'Escape' && document.activeElement === searchInput) {
+                if (currentSearchTerm) {
+                    searchInput.value = '';
+                    currentSearchTerm = '';
+                    clearSearchBtn.style.display = 'none';
+                    applyFilters();
+                } else {
+                    searchInput.blur();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
