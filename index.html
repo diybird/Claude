@@ -3,382 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Comprehensive showcase of AI image, video, and audio generation models in 2025 with pricing, features, and comparisons.">
+    <meta name="keywords" content="AI models, image generation, video generation, audio generation, AI pricing, Sora, Midjourney, Runway, Veo">
     <title>AI Image, Video & Audio Models 2025 | Comprehensive Showcase</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #0a0a0f;
-            color: #e4e4e7;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 60px;
-            padding-top: 20px;
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            color: #a1a1aa;
-            margin-bottom: 40px;
-        }
-
-        .search-container {
-            max-width: 700px;
-            margin: 0 auto 40px;
-        }
-
-        .search-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 18px;
-            color: #71717a;
-            pointer-events: none;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 16px 50px 16px 50px;
-            background: #18181b;
-            border: 2px solid #27272a;
-            border-radius: 12px;
-            color: #e4e4e7;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        .search-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .search-input::placeholder {
-            color: #71717a;
-        }
-
-        .clear-search {
-            position: absolute;
-            right: 14px;
-            background: #27272a;
-            border: none;
-            padding: 6px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            color: #a1a1aa;
-        }
-
-        .clear-search:hover {
-            background: #3f3f46;
-            color: #e4e4e7;
-        }
-
-        .search-results-count {
-            margin-top: 12px;
-            text-align: center;
-            color: #a1a1aa;
-            font-size: 0.9rem;
-        }
-
-        .filters-container {
-            margin-bottom: 50px;
-        }
-
-        .filter-group {
-            margin-bottom: 30px;
-        }
-
-        .filter-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #71717a;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .filter-btn {
-            padding: 10px 20px;
-            background: #18181b;
-            border: 1px solid #27272a;
-            color: #a1a1aa;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .filter-btn:hover {
-            border-color: #667eea;
-            color: #e4e4e7;
-            transform: translateY(-2px);
-        }
-
-        .filter-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: transparent;
-            color: white;
-        }
-
-        .category-section {
-            margin-bottom: 60px;
-        }
-
-        .category-title {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #fafafa;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .category-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-        }
-
-        .models-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 24px;
-        }
-
-        .model-card {
-            background: #18181b;
-            border: 1px solid #27272a;
-            border-radius: 16px;
-            padding: 28px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .model-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .model-card:hover {
-            border-color: #667eea;
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
-        }
-
-        .model-card:hover::before {
-            opacity: 1;
-        }
-
-        .model-header {
-            margin-bottom: 20px;
-        }
-
-        .model-name {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #fafafa;
-            margin-bottom: 8px;
-        }
-
-        .model-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .meta-tag {
-            font-size: 0.85rem;
-            padding: 4px 12px;
-            background: #27272a;
-            border-radius: 6px;
-            color: #a1a1aa;
-        }
-
-        .pricing-tag {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            color: #a5b4fc;
-            font-weight: 600;
-        }
-
-        .developer {
-            color: #667eea;
-        }
-
-        .release-date {
-            color: #a1a1aa;
-        }
-
-        .model-description {
-            color: #a1a1aa;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        .features-section {
-            margin-top: 20px;
-        }
-
-        .features-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #a1a1aa;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .tag {
-            padding: 6px 12px;
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            color: #a5b4fc;
-            transition: all 0.2s ease;
-        }
-
-        .tag:hover {
-            background: rgba(102, 126, 234, 0.2);
-            transform: scale(1.05);
-        }
-
-        .highlight-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: white;
-            margin-bottom: 12px;
-        }
-
-        footer {
-            text-align: center;
-            padding: 40px 20px;
-            margin-top: 60px;
-            border-top: 1px solid #27272a;
-            color: #71717a;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            .models-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .category-title {
-                font-size: 1.5rem;
-            }
-        }
-
-        .stats-bar {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-bottom: 50px;
-            padding: 30px;
-            background: #18181b;
-            border: 1px solid #27272a;
-            border-radius: 16px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #a1a1aa;
-            margin-top: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Screen reader announcements -->
+    <div id="aria-announcements" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+
     <div class="container">
         <header>
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                🌙 <span>Light Mode</span>
+            </button>
             <h1>AI Generation Models 2025</h1>
-            <p class="subtitle">Image, Video & Audio Generation Models with Advanced Features</p>
+            <p class="subtitle">Image, Video & Audio Generation Models with Advanced Features & Pricing</p>
         </header>
 
-        <div class="stats-bar">
+        <div class="stats-bar" role="region" aria-label="Statistics">
             <div class="stat-item">
                 <div class="stat-number">27</div>
                 <div class="stat-label">Total Models</div>
@@ -397,9 +40,9 @@
             </div>
         </div>
 
-        <div class="search-container">
+        <div class="search-container" role="search">
             <div class="search-wrapper">
-                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="8"></circle>
                     <path d="m21 21-4.35-4.35"></path>
                 </svg>
@@ -407,39 +50,53 @@
                     type="text"
                     id="searchInput"
                     class="search-input"
-                    placeholder="Search models by name, developer, or features..."
+                    placeholder="Search models by name, developer, or features... (Ctrl+K)"
                     autocomplete="off"
+                    aria-label="Search models"
                 />
-                <button class="clear-search" id="clearSearch" style="display: none;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button class="clear-search" id="clearSearch" style="display: none;" aria-label="Clear search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
             </div>
-            <div class="search-results-count" id="searchResultsCount"></div>
+            <div class="search-results-count" id="searchResultsCount" aria-live="polite"></div>
         </div>
 
-        <div class="filters-container">
+        <div class="sorting-controls">
+            <label for="sortSelect" class="sort-label">Sort by:</label>
+            <select id="sortSelect" class="sort-select" aria-label="Sort models">
+                <option value="name">Name (A-Z)</option>
+                <option value="price-low">Price (Low to High)</option>
+                <option value="price-high">Price (High to Low)</option>
+                <option value="date">Release Date (Newest)</option>
+            </select>
+            <button id="comparisonToggle" class="comparison-toggle" aria-label="Toggle comparison mode">
+                <span>📊</span> Compare Models
+            </button>
+        </div>
+
+        <div class="filters-container" role="region" aria-label="Filters">
             <div class="filter-group">
                 <div class="filter-label">Model Type</div>
                 <div class="filters">
-                    <button class="filter-btn" data-filter="image">Image</button>
-                    <button class="filter-btn" data-filter="video">Video</button>
-                    <button class="filter-btn" data-filter="audio">Audio</button>
+                    <button class="filter-btn" data-filter="image" aria-pressed="false">Image</button>
+                    <button class="filter-btn" data-filter="video" aria-pressed="false">Video</button>
+                    <button class="filter-btn" data-filter="audio" aria-pressed="false">Audio</button>
                 </div>
             </div>
 
             <div class="filter-group">
                 <div class="filter-label">Features</div>
                 <div class="filters">
-                    <button class="filter-btn" data-filter="consistency">Character Consistency</button>
-                    <button class="filter-btn" data-filter="editing">Editing</button>
-                    <button class="filter-btn" data-filter="realistic">Photorealistic</button>
-                    <button class="filter-btn" data-filter="camera-control">Camera Control</button>
-                    <button class="filter-btn" data-filter="fast">Fast Generation</button>
-                    <button class="filter-btn" data-filter="opensource">Open Source</button>
-                    <button class="filter-btn" data-filter="professional">Professional</button>
+                    <button class="filter-btn" data-filter="consistency" aria-pressed="false">Character Consistency</button>
+                    <button class="filter-btn" data-filter="editing" aria-pressed="false">Editing</button>
+                    <button class="filter-btn" data-filter="realistic" aria-pressed="false">Photorealistic</button>
+                    <button class="filter-btn" data-filter="camera-control" aria-pressed="false">Camera Control</button>
+                    <button class="filter-btn" data-filter="fast" aria-pressed="false">Fast Generation</button>
+                    <button class="filter-btn" data-filter="opensource" aria-pressed="false">Open Source</button>
+                    <button class="filter-btn" data-filter="professional" aria-pressed="false">Professional</button>
                 </div>
             </div>
         </div>
@@ -447,24 +104,24 @@
         <!-- IMAGE MODELS SECTION -->
         <section class="category-section" data-category="image">
             <h2 class="category-title">
-                <span class="category-icon">🎨</span>
+                <span class="category-icon" aria-hidden="true">🎨</span>
                 Image Generation Models
             </h2>
             <div class="models-grid">
 
                 <!-- Nano Banana -->
-                <div class="model-card" data-tags="image editing realistic fast consistency">
+                <article class="model-card" data-tags="image editing realistic fast consistency" data-price="0.039" data-date="2025-08">
                     <div class="highlight-badge">Character Consistency</div>
                     <div class="model-header">
-                        <h3 class="model-name">Nano Banana</h3>
+                        <h3 class="model-name">Nano Banana (Gemini 2.5 Flash)</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Google</span>
                             <span class="meta-tag release-date">August 2025</span>
-                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">$0.039/image</span>
+                            <span class="meta-tag pricing-tag">$0.039/image</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Gemini 2.5 Flash Image - Google's latest model with exceptional character consistency across multiple edits and conversational editing capabilities.
+                        Gemini 2.5 Flash Image - Google's latest model with exceptional character consistency across multiple edits and conversational editing capabilities. Fast generation at 9 seconds average.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -480,21 +137,21 @@
                             <span class="tag">Background Replacement</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Flux Kontext -->
-                <div class="model-card" data-tags="image editing professional precise realistic">
+                <article class="model-card" data-tags="image editing professional precise realistic" data-price="0.08" data-date="2025-05">
                     <div class="highlight-badge">Professional Choice</div>
                     <div class="model-header">
                         <h3 class="model-name">Flux 1.1 Kontext Max</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Black Forest Labs</span>
-                            <span class="meta-tag release-date">2025</span>
-                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">$0.04/generation</span>
+                            <span class="meta-tag release-date">May 2025</span>
+                            <span class="meta-tag pricing-tag">$0.08/image</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Context-aware image generation and editing suite with exceptional precision and professional workflow support.
+                        Context-aware image generation and editing suite with exceptional precision and professional workflow support. Pro model available at $0.04/image.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -509,20 +166,20 @@
                             <span class="tag">4MP Ultra Resolution</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Midjourney V7 -->
-                <div class="model-card" data-tags="image artistic creative aesthetic consistency">
+                <article class="model-card" data-tags="image artistic creative aesthetic consistency" data-price="10" data-date="2025-04">
                     <div class="model-header">
                         <h3 class="model-name">Midjourney V7</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Midjourney</span>
                             <span class="meta-tag release-date">April 2025</span>
-                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">From $10/mo</span>
+                            <span class="meta-tag pricing-tag">From $10/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Complete architectural redesign with improved aesthetics, better body/hand coherence, and character reference features for maintaining consistent characters. Plans: Basic ($10/mo), Standard ($30/mo), Pro ($60/mo), Mega ($120/mo).
+                        Complete architectural redesign with improved aesthetics, better body/hand coherence, and character reference features. Plans: Basic ($10/mo), Standard ($30/mo), Pro ($60/mo), Mega ($120/mo). Annual plans save 20%.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -538,20 +195,21 @@
                             <span class="tag">Image Prompts</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- MAI-Image-1 -->
-                <div class="model-card" data-tags="image realistic fast microsoft">
+                <article class="model-card" data-tags="image realistic fast microsoft" data-price="0" data-date="2025-11">
                     <div class="highlight-badge">New Release</div>
                     <div class="model-header">
                         <h3 class="model-name">MAI-Image-1</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Microsoft</span>
                             <span class="meta-tag release-date">November 2025</span>
+                            <span class="meta-tag pricing-tag">Free (Bing/Copilot)</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Microsoft's first proprietary image generator excelling in food photography, natural scenes, and lighting effects.
+                        Microsoft's first proprietary image generator excelling in food photography, natural scenes, and lighting effects. Available free through Bing and Copilot.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -565,19 +223,20 @@
                             <span class="tag">Speed Optimized</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Adobe Firefly Image Model 5 -->
-                <div class="model-card" data-tags="image realistic professional editing">
+                <article class="model-card" data-tags="image realistic professional editing" data-price="9.99" data-date="2025-10">
                     <div class="model-header">
                         <h3 class="model-name">Adobe Firefly Image Model 5</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Adobe</span>
                             <span class="meta-tag release-date">October 2025</span>
+                            <span class="meta-tag pricing-tag">From $9.99/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Studio-quality photorealistic image generation with native 4MP resolution and ecosystem integration.
+                        Studio-quality photorealistic image generation with native 4MP resolution. Plans: Standard ($9.99/mo, 2K credits), Pro ($29.99/mo, 7K credits), Premium ($199.99/mo, 50K credits).
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -591,19 +250,20 @@
                             <span class="tag">Commercial Safe</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- GPT-4o Image -->
-                <div class="model-card" data-tags="image realistic text professional">
+                <article class="model-card" data-tags="image realistic text professional" data-price="20" data-date="2025-03">
                     <div class="model-header">
                         <h3 class="model-name">GPT-4o Image Generation</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">OpenAI</span>
                             <span class="meta-tag release-date">March 2025</span>
+                            <span class="meta-tag pricing-tag">ChatGPT Plus $20/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Autoregressive architecture with exceptional text rendering and native multimodal capabilities.
+                        Autoregressive architecture with exceptional text rendering and native multimodal capabilities. Included with ChatGPT Plus subscription.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -616,15 +276,16 @@
                             <span class="tag">ChatGPT Integration</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Reve Image -->
-                <div class="model-card" data-tags="image realistic precise">
+                <article class="model-card" data-tags="image realistic precise" data-price="15" data-date="2025-03">
                     <div class="model-header">
                         <h3 class="model-name">Reve Image</h3>
                         <div class="model-meta">
-                            <span class="meta-tag developer">Various</span>
+                            <span class="meta-tag developer">Various Providers</span>
                             <span class="meta-tag release-date">March 2025</span>
+                            <span class="meta-tag pricing-tag">~$15/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
@@ -640,19 +301,20 @@
                             <span class="tag">High Detail</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Ideogram 3.0 -->
-                <div class="model-card" data-tags="image text design realistic">
+                <article class="model-card" data-tags="image text design realistic" data-price="7" data-date="2025-03">
                     <div class="model-header">
                         <h3 class="model-name">Ideogram 3.0</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Ideogram</span>
-                            <span class="meta-tag release-date">2025</span>
+                            <span class="meta-tag release-date">March 2025</span>
+                            <span class="meta-tag pricing-tag">From $7/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Enhanced photorealism with exceptional text rendering and style reference system supporting multiple guide images.
+                        Enhanced photorealism with exceptional text rendering. Plans: Basic ($7/mo, 400 prompts), Plus ($20/mo, 1K prompts), Pro ($60/mo, 3K prompts). Free tier: 20 prompts/day.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -665,19 +327,20 @@
                             <span class="tag">Batch Generation</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Imagen 4 -->
-                <div class="model-card" data-tags="image realistic text google">
+                <article class="model-card" data-tags="image realistic text google" data-price="0.04" data-date="2025-02">
                     <div class="model-header">
                         <h3 class="model-name">Imagen 4</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Google</span>
-                            <span class="meta-tag release-date">2025</span>
+                            <span class="meta-tag release-date">February 2025</span>
+                            <span class="meta-tag pricing-tag">$0.04/image</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Google's diffusion-based model with sharp visuals, accurate text rendering, and multiple style support.
+                        Google's diffusion-based model with sharp visuals and accurate text rendering. Imagen 4 Ultra available at $0.06/image. Free tier available in Google AI Studio.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -688,9 +351,10 @@
                             <span class="tag">Multiple Styles</span>
                             <span class="tag">Improved Realism</span>
                             <span class="tag">Graphic Generation</span>
+                            <span class="tag">SynthID Watermark</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
             </div>
         </section>
@@ -698,23 +362,24 @@
         <!-- VIDEO MODELS SECTION -->
         <section class="category-section" data-category="video">
             <h2 class="category-title">
-                <span class="category-icon">🎬</span>
+                <span class="category-icon" aria-hidden="true">🎬</span>
                 Video Generation Models
             </h2>
             <div class="models-grid">
 
                 <!-- Veo 3.1 -->
-                <div class="model-card" data-tags="video audio realistic editing multishot consistency">
+                <article class="model-card" data-tags="video audio realistic editing multishot consistency" data-price="0.40" data-date="2025-10">
                     <div class="highlight-badge">Character Consistency</div>
                     <div class="model-header">
                         <h3 class="model-name">Veo 3.1</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Google DeepMind</span>
                             <span class="meta-tag release-date">October 2025</span>
+                            <span class="meta-tag pricing-tag">$0.40/sec</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Enhanced creative control with native audio generation, multi-shot sequencing, and character consistency across scenes for powerful video storytelling.
+                        Enhanced creative control with native audio generation, multi-shot sequencing, and character consistency. Ultra plan ($249.99/mo) includes highest access. Standard pricing ~$0.40/sec.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -730,19 +395,20 @@
                             <span class="tag">Flow Integration</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Veo 3 Fast -->
-                <div class="model-card" data-tags="video audio fast youtube free">
+                <article class="model-card" data-tags="video audio fast youtube free" data-price="0.10" data-date="2025-09">
                     <div class="model-header">
                         <h3 class="model-name">Veo 3 Fast</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Google DeepMind</span>
                             <span class="meta-tag release-date">September 2025</span>
+                            <span class="meta-tag pricing-tag">$0.10-0.15/sec</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Optimized for speed and integrated into YouTube Shorts, allowing free creation of video backgrounds and clips with sound.
+                        Optimized for speed and integrated into YouTube Shorts. Free access through YouTube, API pricing ~$0.10-0.15/sec (without audio).
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -756,20 +422,21 @@
                             <span class="tag">Prop Addition</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Sora 2 -->
-                <div class="model-card" data-tags="video realistic cinematic professional">
+                <article class="model-card" data-tags="video realistic cinematic professional" data-price="20" data-date="2025-01">
                     <div class="highlight-badge">Photorealism Leader</div>
                     <div class="model-header">
                         <h3 class="model-name">Sora 2</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">OpenAI</span>
-                            <span class="meta-tag release-date">2024-2025</span>
+                            <span class="meta-tag release-date">January 2025</span>
+                            <span class="meta-tag pricing-tag">From $20/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Industry-leading photorealistic video generation up to 1 minute with storyboard interface for sequential creation.
+                        Industry-leading photorealistic video up to 1 minute. ChatGPT Plus ($20/mo, 1K credits), Pro ($200/mo, 10K credits). API: $0.10/sec. Extra generations: $4/10 videos.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -783,21 +450,21 @@
                             <span class="tag">High Resolution</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Runway Gen-4 -->
-                <div class="model-card" data-tags="video professional editing cinematic realistic camera-control">
+                <article class="model-card" data-tags="video professional editing cinematic realistic camera-control" data-price="12" data-date="2024-11">
                     <div class="highlight-badge">Professional Grade</div>
                     <div class="model-header">
                         <h3 class="model-name">Runway Gen-4</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Runway AI</span>
                             <span class="meta-tag release-date">November 2024</span>
-                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">From $12/mo</span>
+                            <span class="meta-tag pricing-tag">From $12/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Most advanced Runway model with comprehensive professional controls for filmmakers and VFX artists, featuring advanced camera path controls and director's mode. Standard: $12/mo (625 credits), Pro: $28/mo (2250 credits), Unlimited: $95/mo.
+                        Professional controls for filmmakers and VFX artists. Plans: Standard ($12/mo, 625 credits), Pro ($28/mo, 2250 credits), Unlimited ($95/mo).
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -808,27 +475,26 @@
                             <span class="tag">Camera Path Controls</span>
                             <span class="tag">Director's Mode</span>
                             <span class="tag">Pan / Tilt / Rotate</span>
-                            <span class="tag">Zoom In/Out Control</span>
+                            <span class="tag">Zoom Control</span>
                             <span class="tag">Camera Speed Control</span>
                             <span class="tag">Lip-Sync</span>
-                            <span class="tag">Reference Conditioning</span>
                             <span class="tag">24 FPS</span>
-                            <span class="tag">Shot Extension</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Kling 2.1 -->
-                <div class="model-card" data-tags="video realistic physics long cinematic">
+                <article class="model-card" data-tags="video realistic physics long cinematic" data-price="10" data-date="2025-06">
                     <div class="model-header">
                         <h3 class="model-name">Kling 2.1</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Kuaishou AI</span>
                             <span class="meta-tag release-date">June 2025</span>
+                            <span class="meta-tag pricing-tag">From $10/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        High-resolution video generation up to 2 minutes with realistic physics simulation and cinematic motion quality.
+                        High-resolution video up to 2 minutes with realistic physics. Plans: Standard ($10/mo, 660 credits), Pro ($37/mo, 3K credits), Premier ($92/mo, 8K credits). Free: 66 credits/day.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -843,20 +509,21 @@
                             <span class="tag">Multi-Shot</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Luma Dream Machine -->
-                <div class="model-card" data-tags="video fast realistic accessible camera-control">
+                <article class="model-card" data-tags="video fast realistic accessible camera-control" data-price="9.99" data-date="2025-01">
                     <div class="highlight-badge">Camera Control</div>
                     <div class="model-header">
                         <h3 class="model-name">Luma Dream Machine (Ray2)</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Luma AI</span>
-                            <span class="meta-tag release-date">2025</span>
+                            <span class="meta-tag release-date">January 2025</span>
+                            <span class="meta-tag pricing-tag">From $9.99/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Lightning-fast video generation with photorealistic motion, smooth transitions, and advanced camera angle concepts for precise cinematic framing control.
+                        Lightning-fast video with camera controls. Lite ($9.99/mo, 3.2K credits), Plus ($29.99/mo, 10K credits). iOS plans slightly higher. Annual saves 20%.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -865,29 +532,27 @@
                             <span class="tag">Image-to-Video</span>
                             <span class="tag">Ultra Fast (120 frames/120s)</span>
                             <span class="tag">720p Resolution</span>
-                            <span class="tag">24 FPS</span>
                             <span class="tag">9 Camera Angle Concepts</span>
-                            <span class="tag">Low Angle / High Angle</span>
+                            <span class="tag">Low/High Angle</span>
                             <span class="tag">POV / Over Shoulder</span>
                             <span class="tag">Aerial / Overhead</span>
                             <span class="tag">Camera Motion Control</span>
-                            <span class="tag">Cinematic Movement</span>
-                            <span class="tag">Affordable Pricing</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Pika 2.1 -->
-                <div class="model-card" data-tags="video editing realistic social">
+                <article class="model-card" data-tags="video editing realistic social" data-price="10" data-date="2025-02">
                     <div class="model-header">
                         <h3 class="model-name">Pika 2.1</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Pika Labs</span>
                             <span class="meta-tag release-date">February 2025</span>
+                            <span class="meta-tag pricing-tag">From $10/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        High-definition 1080p generation with groundbreaking "Pikadditions" for seamless object and character insertion.
+                        1080p HD with Pikadditions for object insertion. Free (80 credits), Standard ($10/mo, 700 credits), Pro ($35/mo, 2.3K credits), Fancy ($95/mo, 6K credits). Annual saves 20%.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -901,19 +566,20 @@
                             <span class="tag">Social Media Focus</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Hailuo 02 -->
-                <div class="model-card" data-tags="video physics realistic dramatic">
+                <article class="model-card" data-tags="video physics realistic dramatic" data-price="12" data-date="2025-03">
                     <div class="model-header">
                         <h3 class="model-name">Hailuo 02</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">MiniMax</span>
-                            <span class="meta-tag release-date">2025</span>
+                            <span class="meta-tag release-date">March 2025</span>
+                            <span class="meta-tag pricing-tag">~$12/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        3x larger model with 4x more training data, excelling in realistic physics and complex body movements.
+                        3x larger model with 4x more training data, excelling in realistic physics and complex body movements. Subscription-based access.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -927,19 +593,20 @@
                             <span class="tag">Dramatic Content</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Wan 2.2 -->
-                <div class="model-card" data-tags="video opensource cinematic">
+                <article class="model-card" data-tags="video opensource cinematic" data-price="0" data-date="2025-02">
                     <div class="model-header">
                         <h3 class="model-name">Wan 2.2</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Alibaba</span>
-                            <span class="meta-tag release-date">2025</span>
+                            <span class="meta-tag release-date">February 2025</span>
+                            <span class="meta-tag pricing-tag">Free (Open Source)</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Open-source video generation with Mixture-of-Experts architecture and cinematic control for consumer GPUs.
+                        Open-source video generation with Mixture-of-Experts architecture for consumer GPUs. Free to download and use locally.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -953,20 +620,21 @@
                             <span class="tag">Cinematic Control</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Adobe Firefly Video Model -->
-                <div class="model-card" data-tags="video professional camera-control editing">
+                <article class="model-card" data-tags="video professional camera-control editing" data-price="9.99" data-date="2025-02">
                     <div class="highlight-badge">Creative Control</div>
                     <div class="model-header">
                         <h3 class="model-name">Adobe Firefly Video Model</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Adobe</span>
                             <span class="meta-tag release-date">February 2025</span>
+                            <span class="meta-tag pricing-tag">From $9.99/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Professional video generation with advanced camera settings including angle, shot type, and motion control, plus keyframe support for precise creative direction.
+                        Professional video with camera controls. Same pricing as Image Model 5. Video costs 20 credits/sec (1080p). Unlimited through Dec 1, 2025 for Pro/Premium.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -979,22 +647,22 @@
                             <span class="tag">Keyframe Support</span>
                             <span class="tag">Vertical/Horizontal</span>
                             <span class="tag">Commercial Safe</span>
-                            <span class="tag">Creative Cloud Integration</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Seedance 1.0 -->
-                <div class="model-card" data-tags="video realistic multishot consistency">
+                <article class="model-card" data-tags="video realistic multishot consistency" data-price="15" data-date="2025-03">
                     <div class="model-header">
                         <h3 class="model-name">Seedance 1.0</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">ByteDance</span>
-                            <span class="meta-tag release-date">2025</span>
+                            <span class="meta-tag release-date">March 2025</span>
+                            <span class="meta-tag pricing-tag">~$15/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        High-quality 1080p video generation with native multi-shot storytelling and strong character style consistency across sequences.
+                        High-quality 1080p video with native multi-shot storytelling and character consistency. Subscription-based access through various platforms.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -1009,19 +677,20 @@
                             <span class="tag">Camera Angle Switching</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Mochi 1 -->
-                <div class="model-card" data-tags="video opensource">
+                <article class="model-card" data-tags="video opensource" data-price="0" data-date="2024-10">
                     <div class="model-header">
                         <h3 class="model-name">Mochi 1</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Genmo AI</span>
                             <span class="meta-tag release-date">October 2024</span>
+                            <span class="meta-tag pricing-tag">Free (Open Source)</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Open-source AI video generation model supporting community-driven development and experimentation.
+                        Open-source AI video generation supporting community-driven development. Free to use locally or through community platforms.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -1033,20 +702,21 @@
                             <span class="tag">Research Friendly</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Stable Virtual Camera -->
-                <div class="model-card" data-tags="video camera-control 3d realistic">
+                <article class="model-card" data-tags="video camera-control 3d realistic" data-price="20" data-date="2025-03">
                     <div class="highlight-badge">3D Camera Control</div>
                     <div class="model-header">
                         <h3 class="model-name">Stable Virtual Camera</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Stability AI</span>
                             <span class="meta-tag release-date">March 2025</span>
+                            <span class="meta-tag pricing-tag">~$20/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Transforms 2D images into immersive 3D videos with realistic depth and perspective, featuring 14 dynamic camera paths for cinematic control.
+                        Transforms 2D images into immersive 3D videos with 14 dynamic camera paths. Subscription through Stability AI platform.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -1056,28 +726,27 @@
                             <span class="tag">360° Rotation</span>
                             <span class="tag">Lemniscate Path</span>
                             <span class="tag">Spiral Movement</span>
-                            <span class="tag">Dolly Zoom In/Out</span>
-                            <span class="tag">Pan Up/Down/Left/Right</span>
-                            <span class="tag">Roll Control</span>
+                            <span class="tag">Dolly Zoom</span>
+                            <span class="tag">Pan/Roll Control</span>
                             <span class="tag">User-Defined Trajectories</span>
-                            <span class="tag">1-32 Input Images</span>
                             <span class="tag">Up to 1000 Frames</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Runway Aleph -->
-                <div class="model-card" data-tags="video editing camera-control professional realistic">
+                <article class="model-card" data-tags="video editing camera-control professional realistic" data-price="12" data-date="2025-10">
                     <div class="highlight-badge">Advanced Editing</div>
                     <div class="model-header">
                         <h3 class="model-name">Runway Aleph</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Runway AI</span>
                             <span class="meta-tag release-date">October 2025</span>
+                            <span class="meta-tag pricing-tag">From $12/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        State-of-the-art in-context video model for editing real footage with camera angle generation, object manipulation, relighting, and complex VFX work.
+                        State-of-the-art in-context video editing for real footage. Same pricing as Gen-4. Professional VFX capabilities included.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -1089,13 +758,11 @@
                             <span class="tag">Environment Change</span>
                             <span class="tag">Weather Alteration</span>
                             <span class="tag">Object Add/Remove</span>
-                            <span class="tag">Character Appearance</span>
                             <span class="tag">Relighting</span>
                             <span class="tag">Green Screen Mattes</span>
-                            <span class="tag">Professional VFX</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
             </div>
         </section>
@@ -1103,23 +770,24 @@
         <!-- AUDIO MODELS SECTION -->
         <section class="category-section" data-category="audio">
             <h2 class="category-title">
-                <span class="category-icon">🎵</span>
+                <span class="category-icon" aria-hidden="true">🎵</span>
                 Audio & Music Generation Models
             </h2>
             <div class="models-grid">
 
                 <!-- Lyria 2 -->
-                <div class="model-card" data-tags="audio music realtime interactive">
+                <article class="model-card" data-tags="audio music realtime interactive" data-price="0" data-date="2025-04">
                     <div class="highlight-badge">Real-Time</div>
                     <div class="model-header">
                         <h3 class="model-name">Lyria 2 & Lyria RealTime</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Google DeepMind</span>
-                            <span class="meta-tag release-date">2025</span>
+                            <span class="meta-tag release-date">April 2025</span>
+                            <span class="meta-tag pricing-tag">Free (MusicFX/YouTube)</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Real-time music generation with production-quality 48 kHz stereo audio and interactive jam session capabilities.
+                        Real-time music generation with 48 kHz stereo audio. Free access through MusicFX DJ and YouTube Dream Track.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -1133,21 +801,21 @@
                             <span class="tag">SynthID Watermarking</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Suno v5 -->
-                <div class="model-card" data-tags="audio music vocals studio">
+                <article class="model-card" data-tags="audio music vocals studio" data-price="10" data-date="2025-09">
                     <div class="highlight-badge">Studio Grade</div>
                     <div class="model-header">
                         <h3 class="model-name">Suno v5</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Suno</span>
                             <span class="meta-tag release-date">September 2025</span>
-                            <span class="meta-tag" style="color: #10b981; font-weight: 600;">From $10/mo</span>
+                            <span class="meta-tag pricing-tag">From $10/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Most advanced Suno model with studio-grade fidelity, natural vocals, and new composition architecture. Pro & Premier plans available.
+                        Studio-grade fidelity with natural vocals. Free (50 credits/day, v4.5 only), Pro ($10/mo, 2.5K credits, v5 access), Premier ($30/mo, higher allocation). Annual saves 20%.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -1162,19 +830,20 @@
                             <span class="tag">Song Extension</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Eleven Music -->
-                <div class="model-card" data-tags="audio music vocals realistic">
+                <article class="model-card" data-tags="audio music vocals realistic" data-price="11" data-date="2025-08">
                     <div class="model-header">
                         <h3 class="model-name">ElevenLabs Eleven Music</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">ElevenLabs</span>
                             <span class="meta-tag release-date">August 2025</span>
+                            <span class="meta-tag pricing-tag">From $11/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Industry-leading vocal synthesis integrated with full music generation for production-ready songs.
+                        Industry-leading vocal synthesis with music generation. $0.50/min or tier pricing. Free (11 min), Starter ($11/mo, 22 min), Creator ($11/mo, 62 min). Extra: $0.33-0.80/min.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -1187,19 +856,20 @@
                             <span class="tag">Commercial Use</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
                 <!-- Beatoven.ai Maestro -->
-                <div class="model-card" data-tags="audio music licensed ethical">
+                <article class="model-card" data-tags="audio music licensed ethical" data-price="15" data-date="2025-08">
                     <div class="model-header">
                         <h3 class="model-name">Beatoven.ai Maestro</h3>
                         <div class="model-meta">
                             <span class="meta-tag developer">Beatoven.ai</span>
                             <span class="meta-tag release-date">August 2025</span>
+                            <span class="meta-tag pricing-tag">~$15/mo</span>
                         </div>
                     </div>
                     <p class="model-description">
-                        Ethically trained on licensed music, compensating rights-holders while generating adaptive background music.
+                        Ethically trained on licensed music, compensating rights-holders. Subscription-based with royalty-free commercial use.
                     </p>
                     <div class="features-section">
                         <h4 class="features-title">Key Features</h4>
@@ -1213,193 +883,38 @@
                             <span class="tag">Ethical AI</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
             </div>
         </section>
 
     </div>
 
-    <footer>
-        <p>Last Updated: November 16, 2025 | Data compiled from official announcements and industry sources</p>
+    <!-- Comparison Modal -->
+    <div id="comparisonModal" class="comparison-modal" role="dialog" aria-labelledby="comparisonTitle" aria-modal="true">
+        <div class="comparison-content">
+            <div class="comparison-header">
+                <h2 id="comparisonTitle" class="comparison-title">Model Comparison</h2>
+                <button id="closeComparison" class="close-comparison" aria-label="Close comparison">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div id="comparisonGrid" class="comparison-grid"></div>
+        </div>
+    </div>
+
+    <footer role="contentinfo">
+        <p><strong>Last Updated:</strong> November 16, 2025 | Data compiled from official announcements and industry sources</p>
         <p style="margin-top: 10px; font-size: 0.9rem;">Models continue to evolve rapidly. Check official sources for latest updates.</p>
-        <p style="margin-top: 8px; font-size: 0.85rem; color: #71717a;">Pricing shown is approximate and may vary. Please check official provider websites for current pricing.</p>
+        <p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">Pricing shown is approximate and may vary by region. Please check official provider websites for current pricing.</p>
+        <p style="margin-top: 8px; font-size: 0.85rem;">
+            <strong>Keyboard Shortcuts:</strong> Ctrl+K (Search) | Ctrl+/ (Toggle Theme) | Esc (Close/Clear)
+        </p>
     </footer>
 
-    <script>
-        // Filter functionality
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const modelCards = document.querySelectorAll('.model-card');
-        const searchInput = document.getElementById('searchInput');
-        const clearSearchBtn = document.getElementById('clearSearch');
-        const searchResultsCount = document.getElementById('searchResultsCount');
-
-        let activeFilters = {
-            modelType: [], // image, video, audio
-            features: []   // editing, realistic, camera-control, etc.
-        };
-        let currentSearchTerm = '';
-
-        // Filter by button click
-        filterButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const filterValue = button.getAttribute('data-filter');
-
-                // Determine which category this filter belongs to
-                const isModelType = ['image', 'video', 'audio'].includes(filterValue);
-                const category = isModelType ? 'modelType' : 'features';
-
-                // Toggle the filter
-                if (button.classList.contains('active')) {
-                    // Remove from active filters
-                    button.classList.remove('active');
-                    const index = activeFilters[category].indexOf(filterValue);
-                    if (index > -1) {
-                        activeFilters[category].splice(index, 1);
-                    }
-                } else {
-                    // Add to active filters
-                    button.classList.add('active');
-                    activeFilters[category].push(filterValue);
-                }
-
-                applyFilters();
-            });
-        });
-
-        // Search functionality
-        searchInput.addEventListener('input', (e) => {
-            currentSearchTerm = e.target.value.toLowerCase().trim();
-
-            // Show/hide clear button
-            if (currentSearchTerm) {
-                clearSearchBtn.style.display = 'flex';
-            } else {
-                clearSearchBtn.style.display = 'none';
-            }
-
-            applyFilters();
-        });
-
-        // Clear search
-        clearSearchBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            currentSearchTerm = '';
-            clearSearchBtn.style.display = 'none';
-            applyFilters();
-            searchInput.focus();
-        });
-
-        // Apply both filters and search
-        function applyFilters() {
-            let visibleCount = 0;
-
-            modelCards.forEach(card => {
-                const tags = card.getAttribute('data-tags') || '';
-                const modelName = card.querySelector('.model-name').textContent.toLowerCase();
-                const developer = card.querySelector('.developer')?.textContent.toLowerCase() || '';
-                const description = card.querySelector('.model-description')?.textContent.toLowerCase() || '';
-                const allTags = card.querySelectorAll('.tag');
-                let tagText = '';
-                allTags.forEach(tag => {
-                    tagText += tag.textContent.toLowerCase() + ' ';
-                });
-
-                // Check Model Type filter match
-                let modelTypeMatch = false;
-                if (activeFilters.modelType.length === 0) {
-                    // No model type selected = show all
-                    modelTypeMatch = true;
-                } else {
-                    // Check if card matches any selected model type
-                    modelTypeMatch = activeFilters.modelType.some(type => tags.includes(type));
-                }
-
-                // Check Features filter match
-                let featuresMatch = false;
-                if (activeFilters.features.length === 0) {
-                    // No features selected = show all
-                    featuresMatch = true;
-                } else {
-                    // Check if card matches all selected features (AND logic)
-                    featuresMatch = activeFilters.features.every(feature => tags.includes(feature));
-                }
-
-                // Check search match
-                let searchMatch = false;
-                if (!currentSearchTerm) {
-                    searchMatch = true;
-                } else {
-                    const searchableText = `${modelName} ${developer} ${description} ${tags} ${tagText}`;
-                    searchMatch = searchableText.includes(currentSearchTerm);
-                }
-
-                // Show/hide card based on all conditions
-                if (modelTypeMatch && featuresMatch && searchMatch) {
-                    card.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            // Update results count
-            updateResultsCount(visibleCount);
-        }
-
-        // Update search results count
-        function updateResultsCount(count) {
-            const hasActiveFilters = activeFilters.modelType.length > 0 || activeFilters.features.length > 0;
-
-            if (currentSearchTerm || hasActiveFilters) {
-                if (count === 0) {
-                    searchResultsCount.textContent = 'No models found';
-                    searchResultsCount.style.color = '#ef4444';
-                } else if (count === 1) {
-                    searchResultsCount.textContent = '1 model found';
-                    searchResultsCount.style.color = '#a1a1aa';
-                } else {
-                    searchResultsCount.textContent = `${count} models found`;
-                    searchResultsCount.style.color = '#a1a1aa';
-                }
-            } else {
-                searchResultsCount.textContent = '';
-            }
-        }
-
-        // Add smooth scroll behavior
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Keyboard shortcut for search (Ctrl/Cmd + K)
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                searchInput.focus();
-            }
-
-            // Escape to clear search
-            if (e.key === 'Escape' && document.activeElement === searchInput) {
-                if (currentSearchTerm) {
-                    searchInput.value = '';
-                    currentSearchTerm = '';
-                    clearSearchBtn.style.display = 'none';
-                    applyFilters();
-                } else {
-                    searchInput.blur();
-                }
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
