@@ -27,6 +27,298 @@ const elements = {
     themeToggle: null
 };
 
+// Interactive Dot Grid Background
+class InteractiveDotGrid {
+    constructor() {
+        this.canvas = null;
+        this.ctx = null;
+        this.dots = [];
+        this.mouseX = -100;
+        this.mouseY = -100;
+        this.dotSpacing = 5; // 4x denser (was 20px)
+        this.dotRadius = 1;
+        this.hoverRadius = 30;
+        this.animationFrame = null;
+    }
+
+    init() {
+        // Create canvas
+        this.canvas = document.createElement('canvas');
+        this.canvas.id = 'dotCanvas';
+        document.body.prepend(this.canvas);
+        this.ctx = this.canvas.getContext('2d');
+
+        // Set canvas size
+        this.resize();
+
+        // Create dots
+        this.createDots();
+
+        // Event listeners
+        window.addEventListener('resize', () => this.resize());
+        document.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+
+        // Start animation
+        this.animate();
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.createDots();
+    }
+
+    createDots() {
+        this.dots = [];
+        const cols = Math.ceil(this.canvas.width / this.dotSpacing);
+        const rows = Math.ceil(this.canvas.height / this.dotSpacing);
+
+        for (let i = 0; i <= cols; i++) {
+            for (let j = 0; j <= rows; j++) {
+                this.dots.push({
+                    x: i * this.dotSpacing,
+                    y: j * this.dotSpacing,
+                    baseRadius: this.dotRadius
+                });
+            }
+        }
+    }
+
+    handleMouseMove(e) {
+        this.mouseX = e.clientX;
+        this.mouseY = e.clientY;
+    }
+
+    getDotColor() {
+        const isDark = state.theme === 'dark';
+        return isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.12)';
+    }
+
+    animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const color = this.getDotColor();
+
+        this.dots.forEach(dot => {
+            const dx = this.mouseX - dot.x;
+            const dy = this.mouseY - dot.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Calculate radius based on distance from cursor
+            let radius = dot.baseRadius;
+            if (distance < this.hoverRadius) {
+                const factor = 1 - (distance / this.hoverRadius);
+                radius = dot.baseRadius * (1 + factor); // Up to 2x bigger
+            }
+
+            // Draw dot
+            this.ctx.fillStyle = color;
+            this.ctx.beginPath();
+            this.ctx.arc(dot.x, dot.y, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
+
+        this.animationFrame = requestAnimationFrame(() => this.animate());
+    }
+
+    destroy() {
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+        }
+        if (this.canvas) {
+            this.canvas.remove();
+        }
+    }
+}
+
+// Initialize dot grid
+let dotGrid = null;
+
+// Tooltip descriptions for feature tags
+const featureTooltips = {
+    'Text-to-Image': 'Generate images from text descriptions',
+    'Text-to-Video': 'Create videos from text prompts',
+    'Image-to-Video': 'Convert still images into video',
+    'Video-to-Video': 'Transform existing video content',
+    'Image Editing': 'Modify and enhance existing images',
+    'Character Consistency': 'Maintain same character across generations',
+    'Face/Identity Preservation': 'Keep facial features consistent',
+    'Multi-Image Fusion': 'Combine multiple images intelligently',
+    'Natural Language': 'Use conversational prompts',
+    'Fast': 'Quick generation times',
+    'Lighting Preservation': 'Maintain lighting conditions',
+    'Background Replacement': 'Change image backgrounds easily',
+    'Context-Aware Editing': 'Smart editing based on image context',
+    'Style Transfer': 'Apply artistic styles to content',
+    'Watermark Removal': 'Remove watermarks from images',
+    'Relighting': 'Adjust lighting in generated content',
+    'Iterative Workflow': 'Refine results through iterations',
+    '4MP Ultra Resolution': 'Generate ultra-high resolution images',
+    'Unique Aesthetics': 'Distinctive artistic style',
+    'Character Reference (cref)': 'Reference existing characters',
+    'Draft Mode (10x speed)': 'Rapid draft generation',
+    'Body/Hand Coherence': 'Realistic body and hand rendering',
+    'Personalization': 'Customize to your style preferences',
+    'Style Explorer': 'Discover and apply various styles',
+    'Enhanced Textures': 'High-quality texture rendering',
+    'Image Prompts': 'Use images as generation guides',
+    'Food Photography': 'Specialized in food imagery',
+    'Natural Scenes': 'Excels at landscape and nature',
+    'Lighting Effects': 'Advanced lighting control',
+    'Bing Integration': 'Works with Bing services',
+    'Copilot Integration': 'Microsoft Copilot support',
+    'Speed Optimized': 'Fast processing times',
+    '4MP Native Resolution': 'Native 4-megapixel output',
+    'Photorealistic': 'Hyper-realistic image quality',
+    'Custom Models': 'Train custom variations',
+    'Partner Ecosystem': 'Integrate with partner tools',
+    'Studio Quality': 'Professional-grade output',
+    'Commercial Safe': 'Cleared for commercial use',
+    'Exceptional Text Rendering': 'Perfect text in images',
+    'Prompt Adherence': 'Follows instructions precisely',
+    'Multimodal Native': 'Understands multiple input types',
+    'Context Awareness': 'Understands prompt context',
+    'ChatGPT Integration': 'Works within ChatGPT',
+    'Best Prompt Adherence': 'Industry-leading prompt accuracy',
+    'Complex Compositions': 'Handles intricate scenes',
+    'Multi-Element Handling': 'Manages multiple objects well',
+    'High Detail': 'Exceptional detail level',
+    'Text Rendering Excellence': 'Perfect text generation',
+    'Style Reference (3 images)': 'Use up to 3 style references',
+    'Canvas Editor': 'Built-in editing canvas',
+    'Batch Generation': 'Generate multiple at once',
+    'Sharp Visuals': 'Crisp, clear output',
+    'Multiple Styles': 'Various artistic styles',
+    'Improved Realism': 'Enhanced realistic rendering',
+    'Graphic Generation': 'Create graphics and designs',
+    'SynthID Watermark': 'AI-generated content marking',
+    'Native Audio Generation': 'Built-in audio creation',
+    'Multi-Shot Sequencing': 'Create video sequences',
+    'Prevents Feature Changes': 'Maintains character features',
+    'Scene Extension': 'Extend existing scenes',
+    'Precise Editing': 'Fine-grained control',
+    'Object Add/Remove': 'Modify objects in scenes',
+    'Flow Integration': 'Google Flow support',
+    'Audio Sync': 'Synchronized audio generation',
+    'YouTube Shorts Integration': 'Create YouTube Shorts',
+    'Free Access': 'No cost to use',
+    'Motion Application': 'Apply motion to stills',
+    'Video Restyling': 'Change video style',
+    'Prop Addition': 'Add props to scenes',
+    'Hyper-Realistic': 'Extremely realistic output',
+    'Up to 1 Minute': 'Generate 60-second videos',
+    'Storyboard Interface': 'Plan with storyboards',
+    'Cinematic B-Roll': 'Professional B-roll footage',
+    'Sequential Creation': 'Create video sequences',
+    'High Resolution': 'High-quality output',
+    'Camera Path Controls': 'Control camera movement',
+    "Director's Mode": 'Professional filmmaking controls',
+    'Pan / Tilt / Rotate': 'Camera angle controls',
+    'Zoom Control': 'Control zoom in/out',
+    'Camera Speed Control': 'Adjust camera movement speed',
+    'Lip-Sync': 'Synchronize lips to audio',
+    'Reference Conditioning': 'Use reference materials',
+    '24 FPS': '24 frames per second output',
+    'Shot Extension': 'Extend existing shots',
+    '1080p Resolution': 'Full HD quality',
+    '30 FPS': '30 frames per second',
+    'Up to 2 Minutes': 'Generate 2-minute videos',
+    'Realistic Physics': 'Accurate physical simulation',
+    'Dynamic Cameras': 'Moving camera effects',
+    'Multi-Shot': 'Multiple camera angles',
+    'Ultra Fast (120 frames/120s)': 'Very fast generation',
+    '720p Resolution': 'HD quality output',
+    '9 Camera Angle Concepts': 'Nine preset camera angles',
+    'Low/High Angle': 'Low and high angle shots',
+    'POV / Over Shoulder': 'POV and shoulder shots',
+    'Aerial / Overhead': 'Aerial and overhead views',
+    'Camera Motion Control': 'Control camera movement',
+    '1080p HD': 'Full HD 1080p',
+    'Pikadditions': 'Add objects to videos',
+    'Scene Integration': 'Integrate elements seamlessly',
+    'Object Insertion': 'Insert new objects',
+    'Social Media Focus': 'Optimized for social media',
+    'Complex Motion': 'Handle complex movements',
+    'Choreography': 'Dance and movement generation',
+    'Temporal Consistency': 'Consistent across time',
+    'High Prompt Accuracy': 'Follows prompts precisely',
+    'Dramatic Content': 'Create dramatic scenes',
+    'Open Source': 'Free and open source',
+    '720p @ 24fps': '720p at 24 frames/second',
+    'MoE Architecture': 'Mixture of Experts AI',
+    'Consumer GPU': 'Runs on consumer graphics cards',
+    'Cinematic Control': 'Professional cinematography',
+    'Camera Angle Control': 'Adjust camera angles',
+    'Shot Angle Settings': 'Configure shot angles',
+    'Motion Control': 'Control motion parameters',
+    'Keyframe Support': 'Use keyframes for timing',
+    'Vertical/Horizontal': 'Multiple aspect ratios',
+    'Creative Cloud Integration': 'Adobe Creative Cloud support',
+    '1080p @ 24fps': '1080p at 24 frames/second',
+    'Multi-Shot Sequences': 'Multiple shot sequences',
+    'Smooth Motion': 'Fluid motion generation',
+    'Style Preservation': 'Maintain consistent style',
+    'Camera Angle Switching': 'Switch between angles',
+    'Community Driven': 'Community development',
+    'Customizable': 'Highly customizable',
+    'Research Friendly': 'Great for research',
+    'Image-to-3D Video': 'Convert 2D to 3D video',
+    'Multi-View Diffusion': 'Multiple viewpoint generation',
+    '360° Rotation': 'Full 360-degree rotation',
+    'Lemniscate Path': 'Figure-8 camera path',
+    'Spiral Movement': 'Spiral camera movement',
+    'Dolly Zoom': 'Dolly zoom effect',
+    'Pan/Roll Control': 'Pan and roll camera',
+    'User-Defined Trajectories': 'Custom camera paths',
+    'Up to 1000 Frames': 'Generate 1000 frames',
+    'Real Footage Editing': 'Edit real video footage',
+    'Camera Angle Generation': 'Generate new angles',
+    'Shot Continuation': 'Continue existing shots',
+    'Environment Change': 'Change scene environment',
+    'Weather Alteration': 'Modify weather conditions',
+    'Character Appearance': 'Modify character looks',
+    'Green Screen Mattes': 'Green screen compositing',
+    'Professional VFX': 'Professional visual effects',
+    'Real-Time Generation': 'Generate in real-time',
+    '48 kHz Stereo': 'High-quality stereo audio',
+    'Interactive Creation': 'Interactive music creation',
+    'MusicFX DJ': 'DJ-style music mixing',
+    'Multi-Player Jams': 'Collaborative music making',
+    'YouTube Dream Track': 'YouTube integration',
+    'SynthID Watermarking': 'AI audio watermarking',
+    'Text-to-Music': 'Generate music from text',
+    'Studio-Grade Fidelity': 'Professional audio quality',
+    'Natural Vocals': 'Realistic vocal synthesis',
+    'Full Song Generation': 'Complete song creation',
+    'Lyrics Creation': 'Generate song lyrics',
+    'Personas (Style Memory)': 'Remember style preferences',
+    'Stem Separation': 'Separate audio tracks',
+    'Song Extension': 'Extend existing songs',
+    'Custom Song Generation': 'Create custom songs',
+    'Best-in-Class Vocals': 'Top-tier vocal quality',
+    'Human-Like Synthesis': 'Natural-sounding voices',
+    'Production Ready': 'Ready for production use',
+    'Strong Instrumentals': 'Quality instrumental tracks',
+    'Commercial Use': 'Licensed for commercial use',
+    'Licensed Training Data': 'Ethically sourced data',
+    'Artist Compensation': 'Artists are compensated',
+    'Adaptive Music': 'Music adapts to content',
+    'Content-Matched': 'Matches your content',
+    'Background Scoring': 'Create background music',
+    'Royalty-Free': 'No royalty payments needed',
+    'Ethical AI': 'Ethically developed AI'
+};
+
+// Add tooltips to feature tags
+function addFeatureTooltips() {
+    const tags = document.querySelectorAll('.tag');
+    tags.forEach(tag => {
+        const tagText = tag.textContent.trim();
+        if (featureTooltips[tagText]) {
+            tag.setAttribute('data-tooltip', featureTooltips[tagText]);
+        }
+    });
+}
+
 // Initialize the application
 function init() {
     // Cache DOM elements
@@ -34,6 +326,13 @@ function init() {
 
     // Apply saved theme
     applyTheme(state.theme);
+
+    // Initialize interactive dot grid
+    dotGrid = new InteractiveDotGrid();
+    dotGrid.init();
+
+    // Add tooltips to feature tags
+    addFeatureTooltips();
 
     // Set up event listeners
     setupEventListeners();
