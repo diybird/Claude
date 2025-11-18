@@ -645,17 +645,6 @@ h1 {
         inset 0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.highlight-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    background: var(--gradient-success);
-    border-radius: 3px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 12px;
-}
-
 /* Comparison Modal */
 .comparison-modal {
     display: none;
