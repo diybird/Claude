@@ -486,26 +486,25 @@ h1 {
     border: 1px solid var(--border-color);
     border-radius: 2px;
     padding: 28px;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 
-    /* Subtle 3D Effect */
+    /* 3D Effect */
     box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.05),
-        0 4px 8px rgba(0, 0, 0, 0.03),
-        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 8px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .model-card:hover {
+    border-color: var(--accent-primary);
     border-radius: 4px;
-    transform: translateY(-4px);
-    outline: 2px solid var(--accent-primary);
-    outline-offset: 2px;
+    transform: translateY(-3px);
     box-shadow:
-        0 8px 16px rgba(0, 122, 255, 0.15),
-        0 16px 32px rgba(0, 122, 255, 0.1),
-        0 24px 48px rgba(0, 122, 255, 0.05);
+        0 4px 12px rgba(0, 122, 255, 0.2),
+        0 8px 20px rgba(0, 122, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .model-card.comparing {
