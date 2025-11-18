@@ -133,7 +133,7 @@ h1 {
 
 .subtitle {
     font-size: 1.2rem;
-    color: var(--text-secondary);
+    color: #000000;
     margin-bottom: 40px;
 }
 
@@ -620,49 +620,6 @@ h1 {
         inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Tooltip for tags */
-.tag[data-tooltip]:hover::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 8px 12px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--accent-primary);
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-size: 0.75rem;
-    white-space: nowrap;
-    z-index: 100;
-    box-shadow:
-        0 4px 12px rgba(0, 122, 255, 0.3),
-        0 8px 24px rgba(0, 122, 255, 0.2);
-    animation: tooltipFade 0.2s ease-in-out;
-}
-
-.tag[data-tooltip]:hover::before {
-    content: '';
-    position: absolute;
-    bottom: calc(100% + 2px);
-    left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-top-color: var(--accent-primary);
-    z-index: 100;
-    animation: tooltipFade 0.2s ease-in-out;
-}
-
-@keyframes tooltipFade {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-}
 
 .tag:hover {
     background: linear-gradient(145deg, rgba(0, 122, 255, 0.25), rgba(0, 81, 213, 0.2));
