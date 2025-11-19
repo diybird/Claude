@@ -461,6 +461,79 @@ if (document.readyState === 'loading') {
     init();
 }
 
+// Interactive Dot Grid Background
+const canvas = document.getElementById('dotCanvas');
+if (canvas) {
+    const ctx = canvas.getContext('2d');
+    let mouseX = -1000;
+    let mouseY = -1000;
+    const interactiveRadius = 200;
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = document.documentElement.scrollHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Track mouse position
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY + window.scrollY;
+    });
+
+    // Draw dots
+    function drawDots() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const dotSpacing = 30;
+        const dotSize = 1.5;
+        const baseOpacity = 0.25;
+        const highlightOpacity = 0.8;
+
+        // Get theme-aware color
+        const isDarkTheme = document.documentElement.getAttribute('data-theme') !== 'light';
+        const dotColor = isDarkTheme ? '102, 126, 234' : '102, 126, 234';
+
+        for (let x = 0; x < canvas.width; x += dotSpacing) {
+            for (let y = 0; y < canvas.height; y += dotSpacing) {
+                const distance = Math.sqrt(Math.pow(x - mouseX, 2) + Math.pow(y - mouseY, 2));
+
+                // Calculate opacity with smooth gradient falloff
+                let opacity = baseOpacity;
+                if (distance < interactiveRadius) {
+                    // Smooth easing function for gradual falloff
+                    const normalizedDistance = distance / interactiveRadius;
+                    const easing = 1 - Math.pow(normalizedDistance, 2);
+                    opacity = baseOpacity + (highlightOpacity - baseOpacity) * easing;
+                }
+
+                ctx.fillStyle = `rgba(${dotColor}, ${opacity})`;
+                ctx.beginPath();
+                ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        requestAnimationFrame(drawDots);
+    }
+
+    drawDots();
+
+    // Update canvas height on scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            const newHeight = document.documentElement.scrollHeight;
+            if (Math.abs(canvas.height - newHeight) > 100) {
+                resizeCanvas();
+            }
+        }, 100);
+    });
+}
+
 // Export for testing (if needed)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { state, applyFiltersAndSort, toggleTheme };
