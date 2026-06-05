@@ -37,8 +37,8 @@
     var frost = opts.frost != null ? opts.frost : 0.32;  // milky frost
     var tintT = opts.tint  != null ? opts.tint  : 0.06;
     var cx = cap.cx, cy = cap.cy, w = cap.w, h = cap.h, r = cap.r;
-    // bigger "thickness" => deeper refraction + the whole body stays magnified
-    var thick = opts.thickness != null ? opts.thickness : Math.min(w, h) / 2 * 1.5;
+    // "thickness" => depth of refraction. (halved from the chunky version)
+    var thick = opts.thickness != null ? opts.thickness : Math.min(w, h) / 2 * 0.75;
     var pg = [0,0,0], pr = [0,0,0], pb = [0,0,0], bl = [0,0,0];
 
     var x0 = Math.max(0, Math.floor(cx - w/2 - 2)), x1 = Math.min(W, Math.ceil(cx + w/2 + 2));
