@@ -52,13 +52,15 @@
         return fx;
     }
 
-    function addGaussian(layer, amount) {
+    // repeatEdge ONLY for the full-frame backdrop. On a small shape it smears
+    // the blur out to the layer (comp) bounds -> hard-edged squares.
+    function addGaussian(layer, amount, repeatEdge) {
         var parade = layer.property("ADBE Effect Parade");
         var fx;
         try { fx = parade.addProperty("ADBE Gaussian Blur 2"); }
         catch (e) { fx = parade.addProperty("ADBE Gaussian Blur"); }
         fx.property(1).setValue(amount);           // Blurriness
-        try { fx.property(3).setValue(1); } catch (e2) {}  // Repeat Edge Pixels
+        if (repeatEdge) { try { fx.property(3).setValue(1); } catch (e2) {} }
         return fx;
     }
 
@@ -87,18 +89,18 @@
         return L;
     }
 
-    // A soft glow disc (white ellipse, blurred, additive)
-    function glowLayer(name, size, op) {
+    // A soft glow (white ellipse, blurred, additive). w/h let it be a streak.
+    function glowLayer(name, w, h, op) {
         var L = comp.layers.addShape();
         L.name = name;
         var root = L.property("ADBE Root Vectors Group");
         var g = root.addProperty("ADBE Vector Group");
         var c = g.property("ADBE Vectors Group");
         var e = c.addProperty("ADBE Vector Shape - Ellipse");
-        e.property("ADBE Vector Ellipse Size").setValue([size, size]);
+        e.property("ADBE Vector Ellipse Size").setValue([w, h]);
         var f = c.addProperty("ADBE Vector Graphic - Fill");
         f.property("ADBE Vector Fill Color").setValue([1, 1, 1]);
-        addGaussian(L, size * 0.45);
+        addGaussian(L, Math.min(w, h) * 0.5);
         L.property("ADBE Transform Group").property("ADBE Opacity").setValue(op);
         L.blendingMode = BlendingMode.ADD;
         return L;
@@ -115,11 +117,11 @@
         e.property("ADBE Vector Ellipse Size").setValue([size, size]);
         var f = c.addProperty("ADBE Vector Graphic - Fill");
         f.property("ADBE Vector Fill Color").setValue(color);
-        addGaussian(L, size * 0.6);
+        addGaussian(L, size * 0.55);               // soft round blob (no repeat edge)
         var p = L.property("ADBE Transform Group").property("ADBE Position");
         p.setValue(pos);
-        setExpr(p, "wiggle(0.25, 26)");            // slow drift => living refraction
-        L.property("ADBE Transform Group").property("ADBE Opacity").setValue(85);
+        setExpr(p, "wiggle(0.25, 18)");            // slow drift => living refraction
+        L.property("ADBE Transform Group").property("ADBE Opacity").setValue(45);
         return L;
     }
 
@@ -147,13 +149,13 @@
     addSlider(cFx, "Auto Demo", 1);
 
     // --- Colour blobs behind the glass ------------------------------
-    blobLayer("Blob 1", 150, [0.40, 0.25, 0.95], [105, 150]);
-    blobLayer("Blob 2", 150, [0.10, 0.70, 0.85], [205, 215]);
+    blobLayer("Blob 1", 130, [0.34, 0.20, 0.85], [108, 150]);
+    blobLayer("Blob 2", 124, [0.06, 0.55, 0.72], [205, 205]);
 
     // --- Backdrop blur (frosts whatever is behind the dock) ---------
     var backdrop = comp.layers.addSolid([0, 0, 0], "Backdrop Blur", W, H, 1);
     backdrop.adjustmentLayer = true;
-    addGaussian(backdrop, 16);
+    addGaussian(backdrop, 22, true);          // full-frame -> repeat edge OK
 
     // --- Glass matte (clips the blur to the dock shape) -------------
     var matte = roundRectLayer("Glass Matte", DOCK_W, DOCK_H, DOCK_R, [1, 1, 1], 100);
@@ -170,12 +172,17 @@
 
     // --- The glass slab itself --------------------------------------
     var glass = roundRectLayer("Glass Fill", DOCK_W, DOCK_H, DOCK_R,
-                               [1, 1, 1], 22,            // translucent white
-                               [1, 1, 1], 1.4, 35);      // thin rim stroke
+                               [1, 1, 1], 26,            // translucent white
+                               [1, 1, 1], 1.4, 55);      // thin rim stroke
     var glassPos = glass.property("ADBE Transform Group").property("ADBE Position");
     glassPos.setValue([DOCK_CX, DOCK_CY]);
     setExpr(glass.property("ADBE Transform Group").property("ADBE Opacity"),
             'thisComp.layer("Controls").effect("Glass Opacity")("Slider")');
+    // soft drop shadow so the slab separates from the background
+    var ds = glass.property("ADBE Effect Parade").addProperty("ADBE Drop Shadow");
+    ds.property("ADBE Drop Shadow-0002").setValue(60);   // opacity
+    ds.property("ADBE Drop Shadow-0004").setValue(6);    // distance
+    ds.property("ADBE Drop Shadow-0005").setValue(18);   // softness
 
     // top inner highlight line (the bright edge of real glass)
     var rim = roundRectLayer("Rim Light", DOCK_W - 8, DOCK_H - 8, DOCK_R - 4,
@@ -227,18 +234,18 @@
         setExpr(tg.property("ADBE Scale"), buttonScaleExpr(BTN_X[i]));
     }
 
-    // --- Specular sheen that rides along with the cursor ------------
-    var sheen = glowLayer("Sheen", 150, 38);
+    // --- Specular sheen: a thin streak along the TOP of the glass ----
+    var sheen = glowLayer("Sheen", 116, 22, 18);
     var shPos = sheen.property("ADBE Transform Group").property("ADBE Position");
     setExpr(shPos,
         'var cx = thisComp.layer("Cursor").transform.position[0];\n' +
-        'var x = Math.max(70, Math.min(230, cx));\n' +
-        '[x, 178];');
+        'var x = Math.max(95, Math.min(205, cx));\n' +
+        '[x, ' + (DOCK_CY - 22) + '];');                 // sits on the top edge
     setExpr(sheen.property("ADBE Transform Group").property("ADBE Scale"),
-        'var w = 5*Math.sin(time*3);\n[120 + w, 55 - w];');   // liquid wobble
+        'var w = 4*Math.sin(time*3);\n[100 + w, 100 - w];');   // subtle liquid wobble
 
-    // --- The fingertip light ----------------------------------------
-    var light = glowLayer("Cursor Light", 70, 50);
+    // --- The fingertip light (small + soft, not a spotlight) --------
+    var light = glowLayer("Cursor Light", 30, 30, 22);
 
     // --- The Cursor control null (drag me!) -------------------------
     var cursor = comp.layers.addNull(DUR);
@@ -253,7 +260,7 @@
     light.parent = cursor;
     light.property("ADBE Transform Group").property("ADBE Position").setValue([0, 0]);
     setExpr(light.property("ADBE Transform Group").property("ADBE Opacity"),
-        '45 + 12*Math.sin(time*4)');
+        '20 + 8*Math.sin(time*4)');
 
     // ----------------------------------------------------------------
     // Helpful marker on the comp

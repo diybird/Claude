@@ -3,6 +3,11 @@
 A 300 × 300 composition built **entirely from code** — AE layers + expressions —
 that recreates Apple's *Liquid Glass* look as an interactive dock of buttons.
 
+![Liquid Glass Dock preview](preview.png)
+
+*(Above: a still rendered by `render_preview.js` — a dependency-free Node
+rasterizer that previews the exact design without opening After Effects.)*
+
 ## What it is
 
 A frosted glass slab floating over a soft, color-shifting background, holding a
@@ -63,6 +68,15 @@ var f  = Math.exp(-(dx*dx) / (2*Influence*Influence)); // 1 at the cursor, ->0 a
 scale = 100 + Magnify * f;
 lift  = 16 * f;
 ```
+
+## Preview without After Effects
+
+```bash
+node render_preview.js   # writes preview.png (600x600, the 300x300 design at 2x)
+```
+
+Pure Node, no dependencies — handy for tuning colors/proportions before
+committing to an AE render.
 
 ## Tweaking
 
