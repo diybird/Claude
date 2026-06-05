@@ -145,18 +145,44 @@
     var bgLayer = comp.layers.add(bg);
     bgLayer.name = "Scene";
 
-    // -- refraction instance: same scene + Bulge, matted to the lens circle --
+    // -- refraction instance: same scene + lens distortion, matted to a circle --
     var refr = comp.layers.add(bg);
     refr.name = "Refraction";
-    var bulge = refr.property("ADBE Effect Parade").addProperty("ADBE BULGE");
-    var bhR = prop(bulge, "Horizontal Radius", 1); if (bhR) bhR.setValue(R);
-    var bvR = prop(bulge, "Vertical Radius", 2);   if (bvR) bvR.setValue(R);
-    var bHt = prop(bulge, "Bulge Height", 3);
-    var bCtr = prop(bulge, "Bulge Center", 5);
-    setExpr(bhR, 'thisComp.layer("Controls").effect("Radius")("Slider")');
-    setExpr(bvR, 'thisComp.layer("Controls").effect("Radius")("Slider")');
-    setExpr(bHt, 'thisComp.layer("Controls").effect("Magnify")("Slider")');
-    setExpr(bCtr, 'thisComp.layer("Lens").transform.position');
+
+    // Different AE builds expose different distortion match names. Try the most
+    // lens-like first (Spherize), then Bulge, then CC Lens — use whatever loads.
+    var parade = refr.property("ADBE Effect Parade");
+    function tryAdd(mn) { try { return parade.addProperty(mn); } catch (e) { return null; } }
+
+    var lensPosExpr = 'thisComp.layer("Lens").transform.position';
+    var radExpr     = 'thisComp.layer("Controls").effect("Radius")("Slider")';
+    var magExpr     = 'thisComp.layer("Controls").effect("Magnify")("Slider")';
+
+    var fx, type;
+    if      ((fx = tryAdd("ADBE Spherize"))) type = "spherize";
+    else if ((fx = tryAdd("ADBE BULGE")))    type = "bulge";
+    else if ((fx = tryAdd("ADBE Bulge")))    type = "bulge";
+    else if ((fx = tryAdd("CC Lens")))       type = "cclens";
+
+    if (type === "spherize") {
+        // props: 1 = Radius, 2 = Center of Sphere
+        setExpr(prop(fx, "Radius", 1), radExpr);
+        setExpr(prop(fx, "Center of Sphere", 2), lensPosExpr);
+    } else if (type === "bulge") {
+        // props: 1 Horiz R, 2 Vert R, 3 Height, 5 Center
+        setExpr(prop(fx, "Horizontal Radius", 1), radExpr);
+        setExpr(prop(fx, "Vertical Radius", 2), radExpr);
+        setExpr(prop(fx, "Bulge Height", 3), magExpr);
+        setExpr(prop(fx, "Bulge Center", 5), lensPosExpr);
+    } else if (type === "cclens") {
+        // CC Lens: Size (0..big), Center (pixels)
+        var sz = prop(fx, "Size", 1); if (sz) sz.setValue(140);
+        setExpr(prop(fx, "Center", 2), lensPosExpr);
+    } else {
+        alert("Couldn't add a distortion effect (Spherize/Bulge/CC Lens all\n" +
+              "failed on this AE build). The lens will build without refraction;\n" +
+              "apply a Spherize effect to the 'Refraction' layer manually.");
+    }
     addGauss(refr, 1.4);                       // glass softens a touch
 
     // circle matte that clips the refraction (follows the Lens)
