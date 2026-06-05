@@ -1,7 +1,7 @@
 // Liquid-glass refraction for a rounded-rect / capsule region.
 // Uses the LENS magnification model (magnified centre, compressed rim) adapted
 // to the capsule via its SDF normal + depth — plus all-edge reflections, frost
-// and shading. Shared by the browser widget and the offline Node preview.
+// blur and chromatic dispersion. Shared by the browser widget and the Node preview.
 (function (root, factory) {
   if (typeof module !== 'undefined' && module.exports) module.exports = factory();
   else root.LiquidGlass = factory();
@@ -32,14 +32,13 @@
   // bg, blurred, out: RGBA buffers (0..255). cap = {cx,cy,w,h,r}.
   function render(bg, blurred, out, W, H, cap, opts) {
     opts = opts || {};
-    var mag   = opts.mag   != null ? opts.mag   : 0.52;  // <1 => stronger magnification
-    var ca    = opts.ca    != null ? opts.ca    : 0.05;  // chromatic aberration (dispersion)
-    var frost = opts.frost != null ? opts.frost : 0.32;  // milky frost
+    var mag   = opts.mag   != null ? opts.mag   : 0.62;  // <1 => stronger magnification
+    var ca    = opts.ca    != null ? opts.ca    : 0.10;  // chromatic dispersion (rainbow rim)
+    var frost = opts.frost != null ? opts.frost : 0.45;  // frosted-blur strength (0..1)
     var tintT = opts.tint  != null ? opts.tint  : 0.06;
     var cx = cap.cx, cy = cap.cy, w = cap.w, h = cap.h, r = cap.r;
-    // "thickness" => depth of refraction. (halved from the chunky version)
-    var thick = opts.thickness != null ? opts.thickness : Math.min(w, h) / 2 * 0.75;
-    var pg = [0,0,0], pr = [0,0,0], pb = [0,0,0], bl = [0,0,0];
+    var thick = opts.thickness != null ? opts.thickness : Math.min(w, h) / 2; // half-thickness
+    var p0 = [0,0,0], pr = [0,0,0], pg = [0,0,0], pb = [0,0,0], bl = [0,0,0];
 
     var x0 = Math.max(0, Math.floor(cx - w/2 - 2)), x1 = Math.min(W, Math.ceil(cx + w/2 + 2));
     var y0 = Math.max(0, Math.floor(cy - h/2 - 2)), y1 = Math.min(H, Math.ceil(cy + h/2 + 2));
@@ -56,21 +55,26 @@
         var nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
 
         // LENS magnification along the normal: nr = 1 at rim, 0 at the spine.
-        var e = -d;                                   // depth from the edge
+        var e = -d;
         var nr = clamp(1 - e / thick, 0, 1);
         var s  = srcRadius(nr, mag);
-        var ea = nr * nr * nr;                        // chromatic grows toward the rim
         var og = (s - nr) * thick;                    // inward offset (negative) => magnify
-        var oR = (s - ca * ea - nr) * thick;
-        var oB = (s + ca * ea - nr) * thick;
-        sample(bg, W, H, x + nx * og, y + ny * og, pg);
+
+        // CHROMATIC DISPERSION: split R/G/B sampling along the normal, growing
+        // toward the rim, so the edge fringes into colour like real glass.
+        var ea  = nr * nr;                            // 0 centre -> 1 rim (wider band)
+        var disp = ca * ea * thick;
+        var oR = og - disp, oG = og, oB = og + disp;
         sample(bg, W, H, x + nx * oR, y + ny * oR, pr);
+        sample(bg, W, H, x + nx * oG, y + ny * oG, pg);
         sample(bg, W, H, x + nx * oB, y + ny * oB, pb);
         var R = pr[0], G = pg[1], B = pb[2];
 
-        // frost: blend toward the blurred backdrop
+        // FROST BLUR: blend toward the blurred backdrop. A touch stronger toward
+        // the centre (thicker light path) so it reads as a real frosted panel.
         sample(blurred, W, H, x + nx * og, y + ny * og, bl);
-        R = R + (bl[0] - R) * frost; G = G + (bl[1] - G) * frost; B = B + (bl[2] - B) * frost;
+        var fr = frost * (0.7 + 0.3 * (1 - nr));
+        R = R + (bl[0] - R) * fr; G = G + (bl[1] - G) * fr; B = B + (bl[2] - B) * fr;
 
         // milky tint
         R += (255 - R) * tintT; G += (255 - G) * tintT; B += (255 - B) * tintT;
@@ -80,15 +84,14 @@
         var body = (v - 0.45) * 34;
         R = clamp(R + body, 0, 255); G = clamp(G + body, 0, 255); B = clamp(B + body, 0, 255);
 
-        // THICK-GLASS edge wall: a bright outer rim, a dark refracting wall band
-        // a little inside, then a softer inner-bevel highlight deeper in. The
-        // banding across ~30px of depth is what reads as real glass thickness.
-        var rmO   = clamp(1 - e / 4.5, 0, 1); rmO *= rmO;                       // outer rim
-        var reflO = rmO * (Math.max(0, -ny) * 180 + Math.max(0, ny) * 85 + 24);
-        var wall  = clamp(1 - Math.abs(e - 12) / 12, 0, 1) * 62;                // dark glass wall
-        var bevel = clamp(1 - Math.abs(e - 28) / 18, 0, 1) * Math.max(0, -ny) * 50; // inner highlight
-        var lift  = reflO - wall + bevel;
-        R = clamp(R + lift, 0, 255); G = clamp(G + lift, 0, 255); B = clamp(B + lift, 0, 255);
+        // REFLECTIONS on every edge: bright top rim, bottom glow, faint all-around
+        var rm = clamp(1 - e / 5.0, 0, 1); rm *= rm;
+        var refl = rm * (Math.max(0, -ny) * 150 + Math.max(0, ny) * 95 + 26);
+        R = clamp(R + refl, 0, 255); G = clamp(G + refl, 0, 255); B = clamp(B + refl, 0, 255);
+
+        // soft dark "glass thickness" just inside the top edge
+        var topDark = clamp(1 - e / 18, 0, 1) * Math.max(0, -ny) * 44;
+        R = clamp(R - topDark, 0, 255); G = clamp(G - topDark, 0, 255); B = clamp(B - topDark, 0, 255);
 
         out[o] = R; out[o+1] = G; out[o+2] = B; out[o+3] = clamp(-d + 0.5, 0, 1) * 255;
       }

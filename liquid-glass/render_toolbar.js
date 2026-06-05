@@ -41,7 +41,7 @@ function boxBlur(src,radius,passes){let cur=src;for(let p=0;p<passes;p++){const 
     for(let x=0;x<W;x++){tmp[I(x,y)+c]=acc/n;acc+=cur[I(clamp(x+radius+1,0,W-1),y)+c]-cur[I(clamp(x-radius,0,W-1),y)+c];}}
   for(let x=0;x<W;x++)for(let c=0;c<3;c++){let acc=0;const n=radius*2+1;for(let y=-radius;y<=radius;y++)acc+=tmp[I(x,clamp(y,0,H-1))+c];
     for(let y=0;y<H;y++){o2[I(x,y)+c]=acc/n;acc+=tmp[I(x,clamp(y+radius+1,0,H-1))+c]-tmp[I(x,clamp(y-radius,0,H-1))+c];}}cur=o2;}return cur;}
-const blurred = boxBlur(bg.slice(), 14, 3);
+const blurred = boxBlur(bg.slice(), 22, 3);
 
 // ---------------- composite ----------------
 out.set(bg);

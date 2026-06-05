@@ -57,7 +57,7 @@
         for(let y=0;y<H;y++){o[idx(x,y)+c]=acc/n;acc+=tmp[idx(x,cl(y+radius+1,0,H-1))+c]-tmp[idx(x,cl(y-radius,0,H-1))+c];}}cur=o;}
     const out=new Uint8ClampedArray(cur.length); for(let i=0;i<cur.length;i++)out[i]=cur[i]; return out;
   }
-  const blurred = boxBlur(bgData, 14, 3);
+  const blurred = boxBlur(bgData, 22, 3);
 
   // ---- glass state ----
   const cap = {cx:450, cy:196, w:436, h:132, r:66};
