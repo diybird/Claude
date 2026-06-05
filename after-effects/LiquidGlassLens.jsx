@@ -170,7 +170,8 @@
 
     if (type === "spherize") {
         // props: 1 = Radius, 2 = Center of Sphere
-        setExpr(prop(fx, "Radius", 1), radExpr);
+        // a touch larger than the matte so Spherize's own hard edge hides under it
+        setExpr(prop(fx, "Radius", 1), radExpr + ' + 8');
         setExpr(prop(fx, "Center of Sphere", 2), lensPosExpr);
     } else if (type === "bulge") {
         // props: 1 Horiz R, 2 Vert R, 3 Height, 5 Center
@@ -189,23 +190,33 @@
     }
     addGauss(refr, 1.4);                       // glass softens a touch
 
-    // circle matte that clips the refraction (follows the Lens)
-    var matte = circle(comp, "Lens Mask", R * 2, [1,1,1], 100, null, 0, 0);
-    var mp = pos(matte);
-    setExpr(mp, 'thisComp.layer("Lens").transform.position');
-    setExpr(matte.property("ADBE Transform Group").property("ADBE Scale"),
-        'var r = thisComp.layer("Controls").effect("Radius")("Slider");\n' +
-        'var s = r / ' + R + ' * 100;\n[s, s];');
-    addGauss(matte, 2.5);                       // feather the refraction edge (soft circle)
-    try { refr.setTrackMatte(matte, TrackMatteType.ALPHA); }
-    catch (e) { try { matte.moveBefore(refr); refr.trackMatteType = TrackMatteType.ALPHA; } catch (e2) {} }
+    // ============================================================
+    // 3.  Glass surface — comp-sized SOLIDS with FEATHERED MASKS.
+    //     Mask feather can't be clipped (unlike blur on a tight shape),
+    //     so every soft element stays soft on any AE build.
+    // ============================================================
+    var CXc = W / 2, CYc = H / 2;            // mask centre == solid anchor
 
-    // ============================================================
-    // 3.  Glass surface (all parented to the Lens null)
-    // ============================================================
-    function follow(layer, offx, offy) {            // ride along with the lens
-        var p = pos(layer);
-        setExpr(p, 'thisComp.layer("Lens").transform.position + [' + (offx||0) + ',' + (offy||0) + ']');
+    function ellipseShape(cx, cy, rx, ry) {
+        ry = ry == null ? rx : ry;
+        var kx = rx * 0.5523, ky = ry * 0.5523;
+        var s = new Shape();
+        s.vertices    = [[cx, cy - ry], [cx + rx, cy], [cx, cy + ry], [cx - rx, cy]];
+        s.inTangents  = [[-kx, 0], [0, -ky], [kx, 0], [0, ky]];
+        s.outTangents = [[kx, 0], [0, ky], [-kx, 0], [0, -ky]];
+        s.closed = true;
+        return s;
+    }
+    function addMask(layer, shape, feather, mode) {
+        var m = layer.property("ADBE Mask").addProperty("ADBE Mask Atom");
+        m.property("ADBE Mask Shape").setValue(shape);
+        if (feather != null) m.property("ADBE Mask Feather").setValue([feather, feather]);
+        if (mode) m.maskMode = mode;
+        return m;
+    }
+    function solid(name, color) { return comp.layers.addSolid(color, name, W, H, 1); }
+    function follow(layer, offx, offy) {
+        setExpr(pos(layer), 'thisComp.layer("Lens").transform.position + [' + (offx||0) + ',' + (offy||0) + ']');
     }
     function scaleWithRadius(layer, mult) {
         setExpr(layer.property("ADBE Transform Group").property("ADBE Scale"),
@@ -213,44 +224,61 @@
             'var s = r / ' + R + ' * ' + (mult || 100) + ';\n[s, s];');
     }
 
-    // drop shadow (sits on the scene, behind the surface highlights)
-    var shadow = circle(comp, "Drop Shadow", R * 2, [0,0,0], 100, null, 0, 0);
-    addGauss(shadow, 22); setOp(shadow, 24);
-    follow(shadow, 0, 11); scaleWithRadius(shadow, 104);
-    shadow.moveBefore(bgLayer);                       // below the refraction, on the scene
+    // -- circular matte -> feathered refraction edge --
+    var matte = solid("Lens Mask", [1, 1, 1]);
+    addMask(matte, ellipseShape(CXc, CYc, R), 5);
+    follow(matte, 0, 0); scaleWithRadius(matte);
+    try { refr.setTrackMatte(matte, TrackMatteType.ALPHA); }
+    catch (e) { try { matte.moveBefore(refr); refr.trackMatteType = TrackMatteType.ALPHA; } catch (e2) {} }
 
-    // chromatic fringe: a red ring nudged one way, a blue ring the other
-    var caR = circle(comp, "Fringe R", R * 2 - 2, null, null, [1, 0.15, 0.15], 2, 60);
-    caR.blendingMode = BlendingMode.ADD; addGauss(caR, 1); scaleWithRadius(caR);
-    setExpr(pos(caR),
-        'var f = thisComp.layer("Controls").effect("Fringe")("Slider");\n' +
-        'thisComp.layer("Lens").transform.position + [f, f];');
-    var caB = circle(comp, "Fringe B", R * 2 - 2, null, null, [0.2, 0.45, 1], 2, 60);
-    caB.blendingMode = BlendingMode.ADD; addGauss(caB, 1); scaleWithRadius(caB);
-    setExpr(pos(caB),
-        'var f = thisComp.layer("Controls").effect("Fringe")("Slider");\n' +
-        'thisComp.layer("Lens").transform.position - [f, f];');
+    // -- soft drop shadow on the scene, under the lens --
+    var shadow = solid("Drop Shadow", [0, 0, 0]);
+    addMask(shadow, ellipseShape(CXc, CYc, R * 1.02), 34);
+    setOp(shadow, 30); follow(shadow, 0, 12); scaleWithRadius(shadow);
+    shadow.moveBefore(bgLayer);
 
-    // milky frost (very faint white fill)
-    var frost = circle(comp, "Frost", R * 2, [1,1,1], 100, null, 0, 0);
-    setOp(frost, 7); follow(frost, 0, 0); scaleWithRadius(frost);
+    // -- chromatic fringe: soft red/blue rings nudged opposite ways --
+    function fringe(name, color, dir) {
+        var L = solid(name, color);
+        addMask(L, ellipseShape(CXc, CYc, R - 1), 2.5);
+        addMask(L, ellipseShape(CXc, CYc, R - 5), 2.5, MaskMode.SUBTRACT);
+        L.blendingMode = BlendingMode.ADD; setOp(L, 55); scaleWithRadius(L);
+        setExpr(pos(L),
+            'var f = thisComp.layer("Controls").effect("Fringe")("Slider");\n' +
+            'thisComp.layer("Lens").transform.position + [' + dir + '*f, ' + dir + '*f];');
+        return L;
+    }
+    fringe("Fringe R", [1, 0.20, 0.20], 1);
+    fringe("Fringe B", [0.25, 0.50, 1], -1);
 
-    // bright rim (soft, not a hard pencil outline)
-    var rim = circle(comp, "Rim", R * 2 - 1, null, null, [1,1,1], 2.5, 45);
-    rim.blendingMode = BlendingMode.ADD; addGauss(rim, 1.2);
-    follow(rim, 0, 0); scaleWithRadius(rim);
+    // -- milky frost --
+    var frost = solid("Frost", [1, 1, 1]);
+    addMask(frost, ellipseShape(CXc, CYc, R - 2), 3);
+    setOp(frost, 8); follow(frost, 0, 0); scaleWithRadius(frost);
 
-    // inner contact shadow (faint + soft)
-    var inner = circle(comp, "Inner Shadow", R * 2 - 12, null, null, [0,0,0], 6, 14);
-    addGauss(inner, 6); follow(inner, 0, 0); scaleWithRadius(inner, 95);
+    // -- soft inner contact shadow just inside the rim --
+    var inner = solid("Inner Shadow", [0, 0, 0]);
+    addMask(inner, ellipseShape(CXc, CYc, R - 2), 8);
+    addMask(inner, ellipseShape(CXc, CYc, R - 13), 10, MaskMode.SUBTRACT);
+    setOp(inner, 16); follow(inner, 0, 0); scaleWithRadius(inner);
 
-    // specular highlight (soft glow, top-left) + sparkle
-    var spec = circle(comp, "Specular", R * 0.9, [1,1,1], 100, null, 0, 0);
-    addGauss(spec, R * 0.34); spec.blendingMode = BlendingMode.ADD; setOp(spec, 65);
-    follow(spec, -R * 0.38, -R * 0.42); scaleWithRadius(spec);
-    var spark = circle(comp, "Sparkle", 9, [1,1,1], 100, null, 0, 0);
-    addGauss(spark, 3); spark.blendingMode = BlendingMode.ADD; setOp(spark, 90);
-    follow(spark, -R * 0.5, -R * 0.5);
+    // -- bright soft rim --
+    var rim = solid("Rim", [1, 1, 1]);
+    addMask(rim, ellipseShape(CXc, CYc, R), 2.5);
+    addMask(rim, ellipseShape(CXc, CYc, R - 3.5), 2.5, MaskMode.SUBTRACT);
+    rim.blendingMode = BlendingMode.ADD; setOp(rim, 55); follow(rim, 0, 0); scaleWithRadius(rim);
+
+    // -- specular CRESCENT along the top-left rim (disc minus offset disc) --
+    var spec = solid("Specular", [1, 1, 1]);
+    addMask(spec, ellipseShape(CXc, CYc, R * 0.94), 7);
+    addMask(spec, ellipseShape(CXc + R * 0.20, CYc + R * 0.24, R * 0.90), 12, MaskMode.SUBTRACT);
+    spec.blendingMode = BlendingMode.ADD; setOp(spec, 78); follow(spec, 0, 0); scaleWithRadius(spec);
+
+    // -- tiny sparkle --
+    var spark = solid("Sparkle", [1, 1, 1]);
+    addMask(spark, ellipseShape(CXc, CYc, 6), 4);
+    spark.blendingMode = BlendingMode.ADD; setOp(spark, 90);
+    follow(spark, -R * 0.46, -R * 0.5);
 
     // ============================================================
     // 4.  Controls + Lens null
@@ -277,9 +305,10 @@
 
     app.endUndoGroup();
 
-    alert("Liquid Glass Lens built! 🔮\n\n" +
-          "It's drifting on auto-float.\n\n" +
-          "To drive it yourself:\n" +
+    alert("Liquid Glass Lens — build 3 (feathered masks) 🔮\n\n" +
+          "Distortion used: " + (type ? type : "NONE") + "\n" +
+          "(If you don't see this exact text, AE ran an older copy of the file.)\n\n" +
+          "It's drifting on auto-float. To drive it yourself:\n" +
           "  1. Select the 'Controls' null\n" +
           "  2. Set the 'Float' slider to 0\n" +
           "  3. Drag the 'Lens' null over the scene\n\n" +
