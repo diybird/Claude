@@ -31,7 +31,7 @@
     var band   = opts.band   != null ? opts.band   : 46;   // edge refraction width (px)
     var amount = opts.amount != null ? opts.amount : 46;   // edge bend strength (px)
     var ca     = opts.ca     != null ? opts.ca     : 0.10; // chromatic aberration
-    var frost  = opts.frost  != null ? opts.frost  : 0.5;  // blend toward blurred backdrop
+    var frost  = opts.frost  != null ? opts.frost  : 0.6;  // blend toward blurred backdrop
     var tintT  = opts.tint   != null ? opts.tint   : 0.06; // milky tint
     var cx = cap.cx, cy = cap.cy, w = cap.w, h = cap.h, r = cap.r;
     var pg = [0,0,0], pr = [0,0,0], pb = [0,0,0], bl = [0,0,0];
@@ -71,16 +71,22 @@
         // milky tint
         R += (255 - R) * tintT; G += (255 - G) * tintT; B += (255 - B) * tintT;
 
-        // vertical glass shading: dark top, bright bottom
-        var v = clamp((y - (cy - h/2)) / h, 0, 1);
-        var shade = (v - 0.5) * 2;                 // -1 top .. +1 bottom
-        var add = shade > 0 ? shade * 42 : shade * 70;
-        R = clamp(R + add, 0, 255); G = clamp(G + add, 0, 255); B = clamp(B + add, 0, 255);
+        // gentle body shading: a touch darker up top, lighter toward the bottom
+        var v = clamp((y - (cy - h/2)) / h, 0, 1);   // 0 top .. 1 bottom
+        var body = (v - 0.45) * 34;
+        R = clamp(R + body, 0, 255); G = clamp(G + body, 0, 255); B = clamp(B + body, 0, 255);
 
-        // bright rim — softer/wider so it doesn't read as a hard line
-        var rim = clamp(1 - Math.abs(d + 2.2) / 4.0, 0, 1);
-        var rimGlow = rim * (v > 0.5 ? 85 : 28);
-        R = clamp(R + rimGlow, 0, 255); G = clamp(G + rimGlow, 0, 255); B = clamp(B + rimGlow, 0, 255);
+        // REFLECTIONS on every edge, using the surface normal n (outward).
+        // Light from above -> bright top rim; bottom edge glows; sides catch a
+        // faint highlight. rimMask hugs the perimeter all the way around.
+        var edgeDist = -d;
+        var rm = clamp(1 - edgeDist / 5.0, 0, 1); rm *= rm;
+        var refl = rm * (Math.max(0, -ny) * 150 + Math.max(0, ny) * 95 + 26);
+        R = clamp(R + refl, 0, 255); G = clamp(G + refl, 0, 255); B = clamp(B + refl, 0, 255);
+
+        // soft dark "glass thickness" just inside the top edge
+        var topDark = clamp(1 - edgeDist / 18, 0, 1) * Math.max(0, -ny) * 44;
+        R = clamp(R - topDark, 0, 255); G = clamp(G - topDark, 0, 255); B = clamp(B - topDark, 0, 255);
 
         var alpha = clamp(-d + 0.5, 0, 1) * 255;
         out[o] = R; out[o+1] = G; out[o+2] = B; out[o+3] = alpha;
