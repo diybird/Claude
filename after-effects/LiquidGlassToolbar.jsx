@@ -23,6 +23,7 @@
     var PW = 436, PH = 132, PR = 66;
     var pTopY = CY - PH / 2, pBotY = CY + PH / 2;
     var START = [W / 2, 150];            // where the null (pill) starts
+    var distortType = null;              // which refraction effect loaded
 
     app.beginUndoGroup("Build Liquid Glass Toolbar (null)");
 
@@ -55,6 +56,26 @@
         if (feather != null) m.property("ADBE Mask Feather").setValue([feather, feather]);
         if (mode) m.maskMode = mode;
         return m;
+    }
+    function prop(fx, name, idx) {
+        var p = null;
+        try { p = fx.property(name); } catch (e) {}
+        if (!p) { try { p = fx.property(idx); } catch (e2) {} }
+        return p;
+    }
+    // expression that rebuilds the capsule mask AT the null (so the mask moves
+    // while the adjustment layer's transform stays identity -> no content drag)
+    function capsulePathExpr(w, h, r) {
+        return [
+            'var n = thisComp.layer("Glass").transform.position;',
+            'var w=' + w + ', h=' + h + ', r=' + r + ';',
+            'var cx=n[0], cy=n[1];',
+            'var l=cx-w/2, rt=cx+w/2, t=cy-h/2, b=cy+h/2, k=r*0.5523;',
+            'var pts=[[l+r,t],[rt-r,t],[rt,t+r],[rt,b-r],[rt-r,b],[l+r,b],[l,b-r],[l,t+r]];',
+            'var inT=[[-k,0],[0,0],[0,-k],[0,0],[k,0],[0,0],[0,k],[0,0]];',
+            'var outT=[[0,0],[k,0],[0,0],[0,k],[0,0],[-k,0],[0,0],[0,-k]];',
+            'createPath(pts,inT,outT,true);'
+        ].join('\n');
     }
     function addGauss(L, amt, repeatEdge) {
         var fx;
@@ -117,17 +138,46 @@
     addMask(shadow, roundedRectShape(CX, CY, PW + 6, PH + 6, PR), 26);
     setOp(shadow, 32); follow(shadow, 0, 16);
 
-    // FROST = adjustment layer -> blurs/affects EVERYTHING below it, in the capsule
+    // FROST = adjustment layer -> distorts + blurs EVERYTHING below it, in the
+    // capsule. Transform stays identity; the MASK + distortion CENTRE follow the
+    // null via expression, so content isn't dragged sideways.
     var frost = solid("Glass / Frost (adjustment)", [0, 0, 0]);
     frost.adjustmentLayer = true;
-    addMask(frost, roundedRectShape(CX, CY, PW, PH, PR), 2);
+    var fMask = addMask(frost, roundedRectShape(CX, CY, PW, PH, PR), 2);
+    setExpr(fMask.property("ADBE Mask Shape"), capsulePathExpr(PW, PH, PR));
+
+    // (1) REFRACTION — try Spherize / Bulge / CC Lens, centred on the null
+    var fParade = frost.property("ADBE Effect Parade");
+    function tryAddD(mn) { try { return fParade.addProperty(mn); } catch (e) { return null; } }
+    var centerExpr  = 'thisComp.layer("Glass").transform.position';
+    var refractExpr = 'thisComp.layer("Controls").effect("Refract")("Slider")';
+    var dfx;
+    if      ((dfx = tryAddD("ADBE Spherize"))) distortType = "spherize";
+    else if ((dfx = tryAddD("ADBE BULGE")))    distortType = "bulge";
+    else if ((dfx = tryAddD("ADBE Bulge")))    distortType = "bulge";
+    else if ((dfx = tryAddD("CC Lens")))       distortType = "cclens";
+    if (distortType === "spherize") {
+        setExpr(prop(dfx, "Radius", 1), refractExpr);
+        setExpr(prop(dfx, "Center of Sphere", 2), centerExpr);
+    } else if (distortType === "bulge") {
+        var hr = prop(dfx, "Horizontal Radius", 1); if (hr) hr.setValue(PW / 2);
+        var vr = prop(dfx, "Vertical Radius", 2);   if (vr) vr.setValue(PH / 2);
+        setExpr(prop(dfx, "Bulge Height", 3), refractExpr);
+        setExpr(prop(dfx, "Bulge Center", 5), centerExpr);
+    } else if (distortType === "cclens") {
+        setExpr(prop(dfx, "Size", 1), refractExpr);
+        setExpr(prop(dfx, "Center", 2), centerExpr);
+    }
+
+    // (2) FROST blur
     var gb = addGauss(frost, null, true);
     setExpr(gb.property(1), 'thisComp.layer("Controls").effect("Frost")("Slider")');
-    try {   // a little extra glass vividness on whatever is underneath
-        var hs = frost.property("ADBE Effect Parade").addProperty("ADBE HUE SATURATION");
+
+    // (3) a little extra glass vividness on whatever is underneath
+    try {
+        var hs = fParade.addProperty("ADBE HUE SATURATION");
         hs.property(4).setValue(12); hs.property(5).setValue(4);
     } catch (e) {}
-    follow(frost, 0, 0);
 
     // milky tint
     var tint = solid("Glass / Tint", [1, 1, 1]);
@@ -196,6 +246,9 @@
     var cFx = controls.property("ADBE Effect Parade");
     function slider(name, val) { var fx = cFx.addProperty("ADBE Slider Control"); fx.name = name; fx.property(1).setValue(val); return fx; }
     slider("Frost", 14);
+    // refraction amount — units depend on which distortion effect loaded
+    var refDefault = (distortType === "bulge") ? 0.6 : (distortType === "cclens") ? 14 : 60;
+    slider("Refract", refDefault);
     slider("Float", 0);
 
     var glass = comp.layers.addNull(DUR); glass.name = "Glass";
@@ -208,11 +261,13 @@
 
     app.endUndoGroup();
 
-    alert("Liquid Glass Toolbar — build 2 (null-driven) ✨\n\n" +
+    alert("Liquid Glass Toolbar — build 3 (refraction) ✨\n\n" +
+          "Distortion used: " + (distortType ? distortType : "NONE") + "\n\n" +
           "• Drag the 'Glass' null to move the whole toolbar.\n" +
-          "• 'Glass / Frost' is an ADJUSTMENT layer — it blurs/affects\n" +
+          "• 'Glass / Frost' is an ADJUSTMENT layer — it REFRACTS + blurs\n" +
           "  every layer BELOW it inside the capsule. Put your own\n" +
           "  content on layers below it (above the DEMO layers).\n" +
-          "• 'Controls' null: Frost = blur amount, Float = 1 for auto drift.");
+          "• 'Controls' null: Frost = blur, Refract = distortion amount,\n" +
+          "  Float = 1 for auto drift.");
 
 })();
