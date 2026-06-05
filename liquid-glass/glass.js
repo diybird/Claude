@@ -32,12 +32,13 @@
   // bg, blurred, out: RGBA buffers (0..255). cap = {cx,cy,w,h,r}.
   function render(bg, blurred, out, W, H, cap, opts) {
     opts = opts || {};
-    var mag   = opts.mag   != null ? opts.mag   : 0.62;  // <1 => stronger magnification
-    var ca    = opts.ca    != null ? opts.ca    : 0.035; // chromatic aberration
-    var frost = opts.frost != null ? opts.frost : 0.28;  // milky frost (lens is clearer)
+    var mag   = opts.mag   != null ? opts.mag   : 0.52;  // <1 => stronger magnification
+    var ca    = opts.ca    != null ? opts.ca    : 0.05;  // chromatic aberration (dispersion)
+    var frost = opts.frost != null ? opts.frost : 0.32;  // milky frost
     var tintT = opts.tint  != null ? opts.tint  : 0.06;
     var cx = cap.cx, cy = cap.cy, w = cap.w, h = cap.h, r = cap.r;
-    var thick = opts.thickness != null ? opts.thickness : Math.min(w, h) / 2; // half-thickness
+    // bigger "thickness" => deeper refraction + the whole body stays magnified
+    var thick = opts.thickness != null ? opts.thickness : Math.min(w, h) / 2 * 1.5;
     var pg = [0,0,0], pr = [0,0,0], pb = [0,0,0], bl = [0,0,0];
 
     var x0 = Math.max(0, Math.floor(cx - w/2 - 2)), x1 = Math.min(W, Math.ceil(cx + w/2 + 2));
@@ -79,15 +80,15 @@
         var body = (v - 0.45) * 34;
         R = clamp(R + body, 0, 255); G = clamp(G + body, 0, 255); B = clamp(B + body, 0, 255);
 
-        // REFLECTIONS on every edge (normal-based): bright top rim, bottom glow,
-        // faint highlight all around.
-        var rm = clamp(1 - e / 5.0, 0, 1); rm *= rm;
-        var refl = rm * (Math.max(0, -ny) * 150 + Math.max(0, ny) * 95 + 26);
-        R = clamp(R + refl, 0, 255); G = clamp(G + refl, 0, 255); B = clamp(B + refl, 0, 255);
-
-        // soft dark "glass thickness" just inside the top edge
-        var topDark = clamp(1 - e / 18, 0, 1) * Math.max(0, -ny) * 44;
-        R = clamp(R - topDark, 0, 255); G = clamp(G - topDark, 0, 255); B = clamp(B - topDark, 0, 255);
+        // THICK-GLASS edge wall: a bright outer rim, a dark refracting wall band
+        // a little inside, then a softer inner-bevel highlight deeper in. The
+        // banding across ~30px of depth is what reads as real glass thickness.
+        var rmO   = clamp(1 - e / 4.5, 0, 1); rmO *= rmO;                       // outer rim
+        var reflO = rmO * (Math.max(0, -ny) * 180 + Math.max(0, ny) * 85 + 24);
+        var wall  = clamp(1 - Math.abs(e - 12) / 12, 0, 1) * 62;                // dark glass wall
+        var bevel = clamp(1 - Math.abs(e - 28) / 18, 0, 1) * Math.max(0, -ny) * 50; // inner highlight
+        var lift  = reflO - wall + bevel;
+        R = clamp(R + lift, 0, 255); G = clamp(G + lift, 0, 255); B = clamp(B + lift, 0, 255);
 
         out[o] = R; out[o+1] = G; out[o+2] = B; out[o+3] = clamp(-d + 0.5, 0, 1) * 255;
       }
