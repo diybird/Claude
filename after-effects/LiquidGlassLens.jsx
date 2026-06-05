@@ -208,7 +208,7 @@
         return s;
     }
     function addMask(layer, shape, feather, mode) {
-        var m = layer.property("ADBE Mask").addProperty("ADBE Mask Atom");
+        var m = layer.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
         m.property("ADBE Mask Shape").setValue(shape);
         if (feather != null) m.property("ADBE Mask Feather").setValue([feather, feather]);
         if (mode) m.maskMode = mode;
