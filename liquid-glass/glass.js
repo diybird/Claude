@@ -28,9 +28,9 @@
   // bg, blurred, out: RGBA buffers (0..255). cap = {cx,cy,w,h,r}.
   function render(bg, blurred, out, W, H, cap, opts) {
     opts = opts || {};
-    var band   = opts.band   != null ? opts.band   : 34;   // edge refraction width (px)
-    var amount = opts.amount != null ? opts.amount : 40;   // edge bend strength (px)
-    var ca     = opts.ca     != null ? opts.ca     : 0.16; // chromatic aberration
+    var band   = opts.band   != null ? opts.band   : 46;   // edge refraction width (px)
+    var amount = opts.amount != null ? opts.amount : 46;   // edge bend strength (px)
+    var ca     = opts.ca     != null ? opts.ca     : 0.10; // chromatic aberration
     var frost  = opts.frost  != null ? opts.frost  : 0.5;  // blend toward blurred backdrop
     var tintT  = opts.tint   != null ? opts.tint   : 0.06; // milky tint
     var cx = cap.cx, cy = cap.cy, w = cap.w, h = cap.h, r = cap.r;
@@ -50,10 +50,12 @@
         var ny = rrSDF(x, y + 1, cx, cy, w, h, r) - rrSDF(x, y - 1, cx, cy, w, h, r);
         var nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
 
-        // depth inside the edge -> bend peaks at the rim, fades to centre
+        // depth inside the edge. SMOOTH bump: bend is 0 right at the rim (so no
+        // hard seam with the world outside), swells through the band, back to 0
+        // in the clear centre. That's the soft bevel look.
         var e = -d;
         var t = clamp(e / band, 0, 1);
-        var mag = amount * Math.pow(1 - t, 1.7);
+        var mag = amount * Math.sin(Math.PI * t) * (0.6 + 0.4 * (1 - t)); // edge-weighted
 
         // refract: sample the backdrop pulled outward along the normal (+CA)
         sample(bg, W, H, x + nx * mag,            y + ny * mag,            pg);
@@ -75,9 +77,9 @@
         var add = shade > 0 ? shade * 42 : shade * 70;
         R = clamp(R + add, 0, 255); G = clamp(G + add, 0, 255); B = clamp(B + add, 0, 255);
 
-        // bright rim + thin top edge highlight
-        var rim = clamp(1 - Math.abs(d + 1.0) / 1.6, 0, 1);
-        var rimGlow = rim * (v > 0.5 ? 120 : 40);
+        // bright rim — softer/wider so it doesn't read as a hard line
+        var rim = clamp(1 - Math.abs(d + 2.2) / 4.0, 0, 1);
+        var rimGlow = rim * (v > 0.5 ? 85 : 28);
         R = clamp(R + rimGlow, 0, 255); G = clamp(G + rimGlow, 0, 255); B = clamp(B + rimGlow, 0, 255);
 
         var alpha = clamp(-d + 0.5, 0, 1) * 255;
