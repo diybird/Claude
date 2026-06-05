@@ -156,35 +156,54 @@
     addMask(shadow, roundedRectShape(CX, CY, PW + 6, PH + 6, PR), 26);
     setOp(shadow, 32); follow(shadow, 0, 16);
 
-    // FROST = adjustment layer -> distorts + blurs EVERYTHING below it, in the
-    // capsule. Transform stays identity; the MASK + distortion CENTRE follow the
-    // null via expression, so content isn't dragged sideways.
+    // BUMP/HEIGHT map for EDGE refraction: a soft-edged capsule. CC Glass
+    // displaces the background by the SLOPE of this map -> strong at the rim,
+    // flat in the centre, like the rounded edge of a thick glass slab.
+    var height = solid("Glass / Height (map)", [1, 1, 1]);
+    var hMask = addMask(height, roundedRectShape(CX, CY, PW, PH, PR), 2);
+    setExpr(hMask.property("ADBE Mask Shape"), capsulePathExpr(PW, PH, PR));
+    addGauss(height, 16, true);          // soft edges = slope only near the rim
+    height.enabled = false;              // used as a map only, not rendered
+
+    // FROST = adjustment layer -> refracts (edge) + blurs EVERYTHING below it.
     var frost = solid("Glass / Frost (adjustment)", [0, 0, 0]);
     frost.adjustmentLayer = true;
-    var fMask = addMask(frost, roundedRectShape(CX, CY, PW, PH, PR), 2);
+    var fMask = addMask(frost, roundedRectShape(CX, CY, PW, PH, PR), 3);
     setExpr(fMask.property("ADBE Mask Shape"), capsulePathExpr(PW, PH, PR));
 
-    // (1) REFRACTION — try Spherize / Bulge / CC Lens, centred on the null
     var fParade = frost.property("ADBE Effect Parade");
     function tryAddD(mn) { try { return fParade.addProperty(mn); } catch (e) { return null; } }
+    function pn(fx, names) { for (var i = 0; i < names.length; i++) { try { var p = fx.property(names[i]); if (p) return p; } catch (e) {} } return null; }
     var centerExpr  = 'thisComp.layer("Glass").transform.position';
     var refractExpr = 'thisComp.layer("Controls").effect("Refract")("Slider")';
-    var dfx;
-    if      ((dfx = tryAddD("ADBE Spherize"))) distortType = "spherize";
-    else if ((dfx = tryAddD("ADBE BULGE")))    distortType = "bulge";
-    else if ((dfx = tryAddD("ADBE Bulge")))    distortType = "bulge";
-    else if ((dfx = tryAddD("CC Lens")))       distortType = "cclens";
-    if (distortType === "spherize") {
-        setExpr(prop(dfx, "Radius", 1), refractExpr);
-        setExpr(prop(dfx, "Center of Sphere", 2), centerExpr);
-    } else if (distortType === "bulge") {
-        var hr = prop(dfx, "Horizontal Radius", 1); if (hr) hr.setValue(PW / 2);
-        var vr = prop(dfx, "Vertical Radius", 2);   if (vr) vr.setValue(PH / 2);
-        setExpr(prop(dfx, "Bulge Height", 3), refractExpr);
-        setExpr(prop(dfx, "Bulge Center", 5), centerExpr);
-    } else if (distortType === "cclens") {
-        setExpr(prop(dfx, "Size", 1), refractExpr);
-        setExpr(prop(dfx, "Center", 2), centerExpr);
+
+    // (1) REFRACTION — prefer CC Glass (true edge refraction via the bump map)
+    var ccg = tryAddD("CC Glass");
+    if (ccg) {
+        distortType = "ccglass";
+        var bmp = pn(ccg, ["Bump Map"]);    if (bmp) bmp.setValue(height.index);
+        var prp = pn(ccg, ["Property"]);    if (prp) { try { prp.setValue(4); } catch (e) {} }  // 4 = Alpha
+        var sft = pn(ccg, ["Softness"]);    if (sft) { try { sft.setValue(10); } catch (e) {} }
+        var hgt = pn(ccg, ["Height"]);      if (hgt) { try { hgt.setValue(18); } catch (e) {} }
+        var dsp = pn(ccg, ["Displacement"]);if (dsp) setExpr(dsp, refractExpr);
+        // calm CC Glass's own lighting so it doesn't fight our manual shading
+        try { var lg = ccg.property("Light"); var li = pn(lg, ["Light Intensity"]); if (li) li.setValue(45); } catch (e) {}
+        try { var sg = ccg.property("Shading"); var sp = pn(sg, ["Specular"]); if (sp) sp.setValue(15); } catch (e) {}
+    } else {
+        // fallback: Spherize / Bulge (centre magnify) if CC Glass is unavailable
+        var dfx;
+        if      ((dfx = tryAddD("ADBE Spherize"))) distortType = "spherize";
+        else if ((dfx = tryAddD("ADBE BULGE")))    distortType = "bulge";
+        else if ((dfx = tryAddD("ADBE Bulge")))    distortType = "bulge";
+        if (distortType === "spherize") {
+            setExpr(prop(dfx, "Radius", 1), refractExpr);
+            setExpr(prop(dfx, "Center of Sphere", 2), centerExpr);
+        } else if (distortType === "bulge") {
+            var hr = dfx.property(1); if (hr) hr.setValue(PW / 2);
+            var vr = dfx.property(2); if (vr) vr.setValue(PH / 2);
+            setExpr(dfx.property(3), refractExpr);
+            setExpr(dfx.property(5), centerExpr);
+        }
     }
 
     // (2) FROST blur
@@ -259,14 +278,19 @@
     // ============================================================
     // finalise: set Refract default for the loaded distortion, tidy stack
     // ============================================================
-    refractFx.property(1).setValue((distortType === "bulge") ? 0.6 : (distortType === "cclens") ? 14 : 60);
+    refractFx.property(1).setValue(
+        (distortType === "ccglass") ? 90 :
+        (distortType === "bulge")   ? 0.6 :
+        (distortType === "cclens")  ? 14 : 60);
     try { glass.moveToBeginning(); controls.moveToBeginning(); } catch (e) {}
     try { comp.markerProperty.setValueAtTime(0, new MarkerValue("Drag the 'Glass' null. Put your content BELOW 'Glass / Frost'.")); } catch (e) {}
 
     app.endUndoGroup();
 
-    alert("Liquid Glass Toolbar — build 4 (refraction, fixed) ✨\n\n" +
-          "Distortion used: " + (distortType ? distortType : "NONE") + "\n\n" +
+    alert("Liquid Glass Toolbar — build 5 (edge refraction) ✨\n\n" +
+          "Distortion used: " + (distortType ? distortType : "NONE") +
+          (distortType === "ccglass" ? " (edge refraction)" : "") + "\n\n" +
+          (distortType !== "ccglass" ? "NOTE: CC Glass wasn't available, so this fell back to\ncentre-magnify. For true edge refraction you need CC Glass.\n\n" : "") +
           "• Drag the 'Glass' null to move the whole toolbar.\n" +
           "• 'Glass / Frost' is an ADJUSTMENT layer — it REFRACTS + blurs\n" +
           "  every layer BELOW it inside the capsule. Put your own\n" +
