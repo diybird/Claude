@@ -1,7 +1,34 @@
-# Liquid Glass Dock — interactive Apple-style UI (After Effects)
+# Liquid Glass — After Effects scripts
 
-A 300 × 300 composition built **entirely from code** — AE layers + expressions —
-that recreates Apple's *Liquid Glass* look as an interactive dock of buttons.
+Two ExtendScripts, each building a 300 × 300 comp **entirely from code**:
+
+| Script                  | What it builds                                                          |
+|-------------------------|-------------------------------------------------------------------------|
+| `LiquidGlassLens.jsx`   | **The refractive lens** — a draggable glass orb that magnifies/refracts the scene behind it (Bulge + circle matte), with specular rim, chromatic fringe and drop shadow. *This is the "liquid glass" lens effect.* |
+| `LiquidGlassDock.jsx`   | A frosted glass **dock** of buttons with macOS-style magnification.     |
+
+Run either via `File › Scripts › Run Script File…`. Both ship with an auto-demo
+and a draggable control null (set the demo/float slider to 0 to drive by hand).
+
+### `LiquidGlassLens.jsx` — how the refraction works
+- A second copy of the scene gets the **Bulge** effect (magnify + edge bend),
+  clipped to a circle via an alpha **track matte** that follows the `Lens` null.
+- The glass surface (drop shadow, chromatic-fringe rings, milky frost, bright
+  rim, inner contact shadow, specular crescent + sparkle) is built from shape
+  layers parented to the `Lens` null.
+- `Controls` null sliders: **Magnify** (bulge), **Radius** (lens size),
+  **Fringe** (chromatic offset), **Float** (1 = auto drift, 0 = manual drag).
+- Drive it: select `Controls`, set `Float` = 0, drag the `Lens` null.
+
+> A genuinely interactive, verifiable web version of this same lens lives in
+> `../liquid-glass/` (open `index.html`).
+
+---
+
+## LiquidGlassDock.jsx
+
+A 300 × 300 composition that recreates Apple's *Liquid Glass* look as an
+interactive dock of buttons.
 
 ![Liquid Glass Dock preview](preview.png)
 
