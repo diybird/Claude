@@ -99,6 +99,24 @@
     function solid(name, color) { return comp.layers.addSolid(color, name, W, H, 1); }
 
     // ============================================================
+    // Control nulls FIRST — so every expression below resolves to a
+    // layer/slider that already exists (avoids eval-order errors).
+    // ============================================================
+    var controls = comp.layers.addNull(DUR); controls.name = "Controls";
+    setPos(controls, [26, 26]);
+    var cFx = controls.property("ADBE Effect Parade");
+    function slider(name, val) { var fx = cFx.addProperty("ADBE Slider Control"); fx.name = name; fx.property(1).setValue(val); return fx; }
+    slider("Frost", 14);
+    var refractFx = slider("Refract", 60);     // default finalised after distortion is known
+    slider("Float", 0);
+
+    var glass = comp.layers.addNull(DUR); glass.name = "Glass";
+    setPos(glass, START);
+    setExpr(pos(glass),
+        'var f = thisComp.layer("Controls").effect("Float")("Slider");\n' +
+        '(f > 0) ? [' + (W/2) + ' + Math.cos(time*0.6)*' + (W*0.26) + ', ' + START[1] + '] : value;');
+
+    // ============================================================
     // DEMO content (delete & replace with your own layers)
     // ============================================================
     var demoBg = solid("DEMO bg", [0.02, 0.02, 0.02]);
@@ -239,29 +257,15 @@
     follow(more, 132, 0);
 
     // ============================================================
-    // Controls + Glass null
+    // finalise: set Refract default for the loaded distortion, tidy stack
     // ============================================================
-    var controls = comp.layers.addNull(DUR); controls.name = "Controls";
-    setPos(controls, [26, 26]);
-    var cFx = controls.property("ADBE Effect Parade");
-    function slider(name, val) { var fx = cFx.addProperty("ADBE Slider Control"); fx.name = name; fx.property(1).setValue(val); return fx; }
-    slider("Frost", 14);
-    // refraction amount — units depend on which distortion effect loaded
-    var refDefault = (distortType === "bulge") ? 0.6 : (distortType === "cclens") ? 14 : 60;
-    slider("Refract", refDefault);
-    slider("Float", 0);
-
-    var glass = comp.layers.addNull(DUR); glass.name = "Glass";
-    setPos(glass, START);
-    setExpr(pos(glass),
-        'var f = thisComp.layer("Controls").effect("Float")("Slider");\n' +
-        '(f > 0) ? [' + (W/2) + ' + Math.cos(time*0.6)*' + (W*0.26) + ', ' + START[1] + '] : value;');
-
-    comp.markerProperty.setValueAtTime(0, new MarkerValue("Drag the 'Glass' null. Put your content BELOW 'Glass / Frost'."));
+    refractFx.property(1).setValue((distortType === "bulge") ? 0.6 : (distortType === "cclens") ? 14 : 60);
+    try { glass.moveToBeginning(); controls.moveToBeginning(); } catch (e) {}
+    try { comp.markerProperty.setValueAtTime(0, new MarkerValue("Drag the 'Glass' null. Put your content BELOW 'Glass / Frost'.")); } catch (e) {}
 
     app.endUndoGroup();
 
-    alert("Liquid Glass Toolbar — build 3 (refraction) ✨\n\n" +
+    alert("Liquid Glass Toolbar — build 4 (refraction, fixed) ✨\n\n" +
           "Distortion used: " + (distortType ? distortType : "NONE") + "\n\n" +
           "• Drag the 'Glass' null to move the whole toolbar.\n" +
           "• 'Glass / Frost' is an ADJUSTMENT layer — it REFRACTS + blurs\n" +
