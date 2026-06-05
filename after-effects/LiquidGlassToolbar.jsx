@@ -278,16 +278,19 @@
     // ============================================================
     // finalise: set Refract default for the loaded distortion, tidy stack
     // ============================================================
-    refractFx.property(1).setValue(
-        (distortType === "ccglass") ? 90 :
-        (distortType === "bulge")   ? 0.6 :
-        (distortType === "cclens")  ? 14 : 60);
-    try { glass.moveToBeginning(); controls.moveToBeginning(); } catch (e) {}
+    // re-fetch fresh by name (early-captured refs can go stale after a big build)
+    try {
+        comp.layer("Controls").effect("Refract").property(1).setValue(
+            (distortType === "ccglass") ? 90 :
+            (distortType === "bulge")   ? 0.6 :
+            (distortType === "cclens")  ? 14 : 60);
+    } catch (e) {}
+    try { comp.layer("Glass").moveToBeginning(); comp.layer("Controls").moveToBeginning(); } catch (e) {}
     try { comp.markerProperty.setValueAtTime(0, new MarkerValue("Drag the 'Glass' null. Put your content BELOW 'Glass / Frost'.")); } catch (e) {}
 
     app.endUndoGroup();
 
-    alert("Liquid Glass Toolbar — build 5 (edge refraction) ✨\n\n" +
+    alert("Liquid Glass Toolbar — build 6 (edge refraction) ✨\n\n" +
           "Distortion used: " + (distortType ? distortType : "NONE") +
           (distortType === "ccglass" ? " (edge refraction)" : "") + "\n\n" +
           (distortType !== "ccglass" ? "NOTE: CC Glass wasn't available, so this fell back to\ncentre-magnify. For true edge refraction you need CC Glass.\n\n" : "") +
