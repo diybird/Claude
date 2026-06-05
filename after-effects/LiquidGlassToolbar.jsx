@@ -1,215 +1,218 @@
 /**********************************************************************
- * Liquid Glass TOOLBAR — clean frosted pill over a green card.
- * Built from code: AE layers + masks + effects. (build 1)
+ * Liquid Glass TOOLBAR — null-driven, affects layers underneath.  (build 2)
  *
  * RUN:  File › Scripts › Run Script File…  ›  this file
  *
- * Produces a 900 x 440 comp: a black background, a green rounded card,
- * and a floating frosted-glass capsule with 3 thin icons (add / bookmark
- * / more), a dark top edge, a bright bottom rim and a soft drop shadow.
+ * • A "Glass" null moves the whole toolbar. Drag it in the comp.
+ * • The frost is an ADJUSTMENT layer, so it blurs / tints whatever
+ *   layers are BELOW it, clipped to the capsule and following the null.
+ *   --> Put YOUR content on layers BELOW "Glass Frost" (above the demo)
+ *       and the glass will affect them as you drag over them.
+ * • "Controls" null: Frost (blur amount), Float (1 = auto drift demo).
+ *
+ * The green card + dots + text at the bottom are just a DEMO so you can
+ * see the effect — delete them and drop in your own layers.
  *********************************************************************/
 
-(function liquidGlassToolbar() {
+(function liquidGlassToolbarNull() {
 
-    var W = 900, H = 440, FPS = 30, DUR = 5;
+    var W = 900, H = 440, FPS = 30, DUR = 6;
 
-    // pill geometry
-    var PX = 450, PY = 196, PW = 436, PH = 132, PR = 66;
-    var pTop = PY - PH / 2, pBot = PY + PH / 2;
+    // pill geometry, defined around the comp CENTRE so it moves as one unit
+    var CX = W / 2, CY = H / 2;          // = solid anchor (mask centre)
+    var PW = 436, PH = 132, PR = 66;
+    var pTopY = CY - PH / 2, pBotY = CY + PH / 2;
+    var START = [W / 2, 150];            // where the null (pill) starts
 
-    app.beginUndoGroup("Build Liquid Glass Toolbar");
+    app.beginUndoGroup("Build Liquid Glass Toolbar (null)");
 
-    // ============================================================
-    // helpers
-    // ============================================================
+    // ===================== helpers =====================
+    function setExpr(p, e) { if (p) p.expression = e; }
+    function pos(L) { return L.property("ADBE Transform Group").property("ADBE Position"); }
+    function setOp(L, v) { L.property("ADBE Transform Group").property("ADBE Opacity").setValue(v); }
+    function setPos(L, p) { pos(L).setValue(p); }
+    function follow(L, ox, oy) {
+        setExpr(pos(L), 'thisComp.layer("Glass").transform.position + [' + (ox||0) + ',' + (oy||0) + ']');
+    }
     function roundedRectShape(cx, cy, w, h, r) {
-        var k = r * 0.5523;
-        var l = cx - w / 2, rt = cx + w / 2, t = cy - h / 2, b = cy + h / 2;
+        var k = r * 0.5523, l = cx - w/2, rt = cx + w/2, t = cy - h/2, b = cy + h/2;
         var s = new Shape();
-        s.vertices = [
-            [l + r, t], [rt - r, t], [rt, t + r], [rt, b - r],
-            [rt - r, b], [l + r, b], [l, b - r], [l, t + r]
-        ];
-        s.inTangents = [
-            [-k, 0], [0, 0], [0, -k], [0, 0],
-            [k, 0], [0, 0], [0, k], [0, 0]
-        ];
-        s.outTangents = [
-            [0, 0], [k, 0], [0, 0], [0, k],
-            [0, 0], [-k, 0], [0, 0], [0, -k]
-        ];
-        s.closed = true;
-        return s;
+        s.vertices = [[l+r,t],[rt-r,t],[rt,t+r],[rt,b-r],[rt-r,b],[l+r,b],[l,b-r],[l,t+r]];
+        s.inTangents  = [[-k,0],[0,0],[0,-k],[0,0],[k,0],[0,0],[0,k],[0,0]];
+        s.outTangents = [[0,0],[k,0],[0,0],[0,k],[0,0],[-k,0],[0,0],[0,-k]];
+        s.closed = true; return s;
     }
     function ellipseShapeObj(cx, cy, rx, ry) {
-        var kx = rx * 0.5523, ky = ry * 0.5523;
-        var s = new Shape();
-        s.vertices    = [[cx, cy - ry], [cx + rx, cy], [cx, cy + ry], [cx - rx, cy]];
-        s.inTangents  = [[-kx, 0], [0, -ky], [kx, 0], [0, ky]];
-        s.outTangents = [[kx, 0], [0, ky], [-kx, 0], [0, -ky]];
-        s.closed = true;
-        return s;
+        var kx = rx*0.5523, ky = ry*0.5523, s = new Shape();
+        s.vertices    = [[cx,cy-ry],[cx+rx,cy],[cx,cy+ry],[cx-rx,cy]];
+        s.inTangents  = [[-kx,0],[0,-ky],[kx,0],[0,ky]];
+        s.outTangents = [[kx,0],[0,ky],[-kx,0],[0,-ky]];
+        s.closed = true; return s;
     }
-    function addMask(layer, shape, feather, mode) {
-        var m = layer.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
+    function addMask(L, shape, feather, mode) {
+        var m = L.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
         m.property("ADBE Mask Shape").setValue(shape);
         if (feather != null) m.property("ADBE Mask Feather").setValue([feather, feather]);
         if (mode) m.maskMode = mode;
         return m;
     }
-    function setOp(layer, v) { layer.property("ADBE Transform Group").property("ADBE Opacity").setValue(v); }
-    function setPos(layer, p) { layer.property("ADBE Transform Group").property("ADBE Position").setValue(p); }
-    function addGauss(layer, amt) {
+    function addGauss(L, amt, repeatEdge) {
         var fx;
-        try { fx = layer.property("ADBE Effect Parade").addProperty("ADBE Gaussian Blur 2"); }
-        catch (e) { fx = layer.property("ADBE Effect Parade").addProperty("ADBE Gaussian Blur"); }
-        fx.property(1).setValue(amt);
-        try { fx.property(3).setValue(1); } catch (e2) {}
+        try { fx = L.property("ADBE Effect Parade").addProperty("ADBE Gaussian Blur 2"); }
+        catch (e) { fx = L.property("ADBE Effect Parade").addProperty("ADBE Gaussian Blur"); }
+        if (amt != null) fx.property(1).setValue(amt);
+        if (repeatEdge) { try { fx.property(3).setValue(1); } catch (e2) {} }
         return fx;
     }
-    function addRamp(layer, p1, c1, p2, c2, shape) {
-        var fx = layer.property("ADBE Effect Parade").addProperty("ADBE Ramp");
-        fx.property("ADBE Ramp-0001").setValue(p1);
-        fx.property("ADBE Ramp-0002").setValue(c1);
-        fx.property("ADBE Ramp-0003").setValue(p2);
-        fx.property("ADBE Ramp-0004").setValue(c2);
+    function addRamp(L, p1, c1, p2, c2, shape) {
+        var fx = L.property("ADBE Effect Parade").addProperty("ADBE Ramp");
+        fx.property("ADBE Ramp-0001").setValue(p1); fx.property("ADBE Ramp-0002").setValue(c1);
+        fx.property("ADBE Ramp-0003").setValue(p2); fx.property("ADBE Ramp-0004").setValue(c2);
         if (shape) fx.property("ADBE Ramp-0005").setValue(shape);
         return fx;
     }
 
-    // ============================================================
-    // 1. green card scene (precomp, reused for the backdrop blur)
-    // ============================================================
-    var card = app.project.items.addComp("LG Card", W, H, 1, DUR, FPS);
-    var blackBg = card.layers.addSolid([0.02, 0.02, 0.02], "Black", W, H, 1);
-    var green = card.layers.addSolid([0.3, 0.6, 0.28], "Green Card", W, H, 1);
-    addMask(green, roundedRectShape(450, 560, 840, 760, 78), 1.5);
-    addRamp(green, [450, 175], [0.42, 0.74, 0.34], [450, 470], [0.15, 0.40, 0.16]);
-
-    // ============================================================
-    // 2. main comp
-    // ============================================================
     var comp = app.project.items.addComp("Liquid Glass Toolbar", W, H, 1, DUR, FPS);
     comp.bgColor = [0, 0, 0];
     comp.openInViewer();
-
     function solid(name, color) { return comp.layers.addSolid(color, name, W, H, 1); }
 
-    // -- scene (un-blurred) --
-    var scene = comp.layers.add(card);  scene.name = "Scene";
+    // ============================================================
+    // DEMO content (delete & replace with your own layers)
+    // ============================================================
+    var demoBg = solid("DEMO bg", [0.02, 0.02, 0.02]);
+    var green = solid("DEMO green card", [0.3, 0.6, 0.28]);
+    addMask(green, roundedRectShape(450, 560, 840, 760, 78), 1.5);
+    addRamp(green, [450, 175], [0.42, 0.74, 0.34], [450, 470], [0.15, 0.40, 0.16]);
 
-    // -- frosted backdrop: blurred copy of the scene, clipped to the pill --
-    var backdrop = comp.layers.add(card); backdrop.name = "Backdrop Blur";
-    addGauss(backdrop, 14);
-    var capMatte = solid("Pill Matte", [1, 1, 1]);
-    addMask(capMatte, roundedRectShape(PX, PY, PW, PH, PR), 2);
-    try { backdrop.setTrackMatte(capMatte, TrackMatteType.ALPHA); }
-    catch (e) { try { capMatte.moveBefore(backdrop); backdrop.trackMatteType = TrackMatteType.ALPHA; } catch (e2) {} }
+    var txt = comp.layers.addText("LIQUID GLASS");
+    (function () {
+        var td = txt.property("ADBE Text Properties").property("ADBE Text Document");
+        var d = td.value; d.fontSize = 46; d.applyFill = true; d.fillColor = [1, 1, 1];
+        try { d.font = "Arial-BoldMT"; } catch (e) {}
+        td.setValue(d); setPos(txt, [250, 150]); setOp(txt, 85);
+    })();
 
-    // -- soft drop shadow on the scene, under the pill --
-    var shadow = solid("Drop Shadow", [0, 0, 0]);
-    addMask(shadow, roundedRectShape(PX, PY, PW + 6, PH + 6, PR), 26);
-    setOp(shadow, 32); setPos(shadow, [W / 2, H / 2 + 16]);
-    shadow.moveBefore(scene);
+    var dots = comp.layers.addShape(); dots.name = "DEMO dots";
+    (function () {
+        var c = dots.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group").property("ADBE Vectors Group");
+        var cols = [[0.2,0.55,1],[0.1,0.82,0.75],[0.62,0.38,1],[1,0.45,0.5],[0.3,0.85,0.4],[1,0.8,0.2]];
+        for (var i = 0; i < cols.length; i++) {
+            var g = c.addProperty("ADBE Vector Group").property("ADBE Vectors Group");
+            var e = g.addProperty("ADBE Vector Shape - Ellipse");
+            e.property("ADBE Vector Ellipse Size").setValue([34, 34]);
+            e.property("ADBE Vector Ellipse Position").setValue([120 + i * 130, 250]);
+            g.addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue(cols[i]);
+        }
+    })();
 
-    // -- milky glass tint --
-    var tint = solid("Glass Tint", [1, 1, 1]);
-    addMask(tint, roundedRectShape(PX, PY, PW, PH, PR), 2);
-    setOp(tint, 10);
+    // ----- PUT YOUR OWN CONTENT LAYERS HERE (above demo, below Glass Frost) -----
 
-    // -- glass thickness shading: dark top -> light bottom (Overlay) --
-    var shade = solid("Glass Shading", [0.5, 0.5, 0.5]);
-    addMask(shade, roundedRectShape(PX, PY, PW, PH, PR), 2);
-    addRamp(shade, [PX, pTop + 4], [0.06, 0.07, 0.06], [PX, pBot - 4], [0.95, 0.98, 0.95]);
+    // ============================================================
+    // GLASS — everything below follows the "Glass" null
+    // ============================================================
+
+    // soft drop shadow on the content under the pill
+    var shadow = solid("Glass / Drop Shadow", [0, 0, 0]);
+    addMask(shadow, roundedRectShape(CX, CY, PW + 6, PH + 6, PR), 26);
+    setOp(shadow, 32); follow(shadow, 0, 16);
+
+    // FROST = adjustment layer -> blurs/affects EVERYTHING below it, in the capsule
+    var frost = solid("Glass / Frost (adjustment)", [0, 0, 0]);
+    frost.adjustmentLayer = true;
+    addMask(frost, roundedRectShape(CX, CY, PW, PH, PR), 2);
+    var gb = addGauss(frost, null, true);
+    setExpr(gb.property(1), 'thisComp.layer("Controls").effect("Frost")("Slider")');
+    try {   // a little extra glass vividness on whatever is underneath
+        var hs = frost.property("ADBE Effect Parade").addProperty("ADBE HUE SATURATION");
+        hs.property(4).setValue(12); hs.property(5).setValue(4);
+    } catch (e) {}
+    follow(frost, 0, 0);
+
+    // milky tint
+    var tint = solid("Glass / Tint", [1, 1, 1]);
+    addMask(tint, roundedRectShape(CX, CY, PW, PH, PR), 2);
+    setOp(tint, 10); follow(tint, 0, 0);
+
+    // thickness shading: dark top -> light bottom (Overlay)
+    var shade = solid("Glass / Shading", [0.5, 0.5, 0.5]);
+    addMask(shade, roundedRectShape(CX, CY, PW, PH, PR), 2);
+    addRamp(shade, [CX, pTopY + 4], [0.06, 0.07, 0.06], [CX, pBotY - 4], [0.95, 0.98, 0.95]);
     try { shade.blendingMode = BlendingMode.OVERLAY; } catch (e) {}
-    setOp(shade, 90);
+    setOp(shade, 90); follow(shade, 0, 0);
 
-    // -- focused dark band at the very top edge --
-    var topDark = solid("Top Shade", [0, 0, 0]);
-    addMask(topDark, ellipseShapeObj(PX, pTop + 4, PW * 0.46, 26), 18);
-    setOp(topDark, 55);
+    // focused dark band at the top edge
+    var topDark = solid("Glass / Top Shade", [0, 0, 0]);
+    addMask(topDark, ellipseShapeObj(CX, pTopY + 4, PW * 0.46, 26), 18);
+    setOp(topDark, 55); follow(topDark, 0, 0);
 
-    // -- bright bottom rim glow --
-    var botLight = solid("Bottom Glow", [1, 1, 1]);
-    addMask(botLight, ellipseShapeObj(PX, pBot - 4, PW * 0.44, 22), 16);
+    // bright bottom rim glow
+    var botLight = solid("Glass / Bottom Glow", [1, 1, 1]);
+    addMask(botLight, ellipseShapeObj(CX, pBotY - 4, PW * 0.44, 22), 16);
     try { botLight.blendingMode = BlendingMode.ADD; } catch (e) {}
-    setOp(botLight, 55);
+    setOp(botLight, 55); follow(botLight, 0, 0);
 
-    // -- crisp rim stroke (outer minus inner), brighter toward the bottom --
-    var rim = solid("Rim", [1, 1, 1]);
-    addMask(rim, roundedRectShape(PX, PY, PW, PH, PR), 1.2);
-    addMask(rim, roundedRectShape(PX, PY, PW - 3, PH - 3, PR - 1.5), 1.2, MaskMode.SUBTRACT);
+    // crisp rim stroke
+    var rim = solid("Glass / Rim", [1, 1, 1]);
+    addMask(rim, roundedRectShape(CX, CY, PW, PH, PR), 1.2);
+    addMask(rim, roundedRectShape(CX, CY, PW - 3, PH - 3, PR - 1.5), 1.2, MaskMode.SUBTRACT);
     try { rim.blendingMode = BlendingMode.ADD; } catch (e) {}
-    setOp(rim, 50);
+    setOp(rim, 50); follow(rim, 0, 0);
 
-    // ============================================================
-    // 3. icons (thin white strokes)
-    // ============================================================
+    // ---------------- icons (thin white strokes, follow the null) ----------------
     var ICON = [1, 1, 1], LW = 3.2;
-    function shapeLayer(name) { var L = comp.layers.addShape(); L.name = name; return L; }
-    function vGroup(L) {
-        return L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group").property("ADBE Vectors Group");
-    }
-    function rectIn(c, w, h, round) {
-        var r = c.addProperty("ADBE Vector Shape - Rect");
-        r.property("ADBE Vector Rect Size").setValue([w, h]);
-        r.property("ADBE Vector Rect Roundness").setValue(round);
-    }
-    function pathIn(c, verts, closed) {
-        var g = c.addProperty("ADBE Vector Shape - Group");
-        var s = new Shape(); s.vertices = verts; s.closed = !!closed;
-        g.property("ADBE Vector Shape").setValue(s);
-    }
-    function ellipseIn(c, dia, off) {
-        var e = c.addProperty("ADBE Vector Shape - Ellipse");
-        e.property("ADBE Vector Ellipse Size").setValue([dia, dia]);
-        if (off) e.property("ADBE Vector Ellipse Position").setValue(off);
-    }
-    function strokeIn(c, col, w) {
-        var s = c.addProperty("ADBE Vector Graphic - Stroke");
-        s.property("ADBE Vector Stroke Color").setValue(col);
-        s.property("ADBE Vector Stroke Width").setValue(w);
+    function vGroup(L) { return L.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group").property("ADBE Vectors Group"); }
+    function rectIn(c, w, h, round) { var r = c.addProperty("ADBE Vector Shape - Rect");
+        r.property("ADBE Vector Rect Size").setValue([w, h]); r.property("ADBE Vector Rect Roundness").setValue(round); }
+    function pathIn(c, verts, closed) { var g = c.addProperty("ADBE Vector Shape - Group");
+        var s = new Shape(); s.vertices = verts; s.closed = !!closed; g.property("ADBE Vector Shape").setValue(s); }
+    function ellipseIn(c, dia, off) { var e = c.addProperty("ADBE Vector Shape - Ellipse");
+        e.property("ADBE Vector Ellipse Size").setValue([dia, dia]); if (off) e.property("ADBE Vector Ellipse Position").setValue(off); }
+    function strokeIn(c, col, w) { var s = c.addProperty("ADBE Vector Graphic - Stroke");
+        s.property("ADBE Vector Stroke Color").setValue(col); s.property("ADBE Vector Stroke Width").setValue(w);
         try { s.property("ADBE Vector Stroke Line Cap").setValue(2); } catch (e) {}
-        try { s.property("ADBE Vector Stroke Line Join").setValue(2); } catch (e2) {}
-    }
-    function fillIn(c, col) {
-        c.addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue(col);
-    }
+        try { s.property("ADBE Vector Stroke Line Join").setValue(2); } catch (e2) {} }
+    function fillIn(c, col) { c.addProperty("ADBE Vector Graphic - Fill").property("ADBE Vector Fill Color").setValue(col); }
+    function iconLayer(name) { var L = comp.layers.addShape(); L.name = name; return L; }
 
-    var ix = [PX - 132, PX, PX + 132];
+    var add = iconLayer("Glass / Icon Add");
+    var ca = vGroup(add); rectIn(ca, 52, 42, 11);
+    pathIn(ca, [[-11,0],[11,0]], false); pathIn(ca, [[0,-11],[0,11]], false); strokeIn(ca, ICON, LW);
+    follow(add, -132, 0);
 
-    // (a) add  — rounded rectangle outline + plus
-    var add = shapeLayer("Icon Add");
-    var ca = vGroup(add);
-    rectIn(ca, 52, 42, 11);
-    pathIn(ca, [[-11, 0], [11, 0]], false);
-    pathIn(ca, [[0, -11], [0, 11]], false);
-    strokeIn(ca, ICON, LW);
-    setPos(add, [ix[0], PY]);
+    var bm = iconLayer("Glass / Icon Bookmark");
+    var cb = vGroup(bm); pathIn(cb, [[-17,-24],[17,-24],[17,24],[0,11],[-17,24]], true); strokeIn(cb, ICON, LW);
+    follow(bm, 0, 0);
 
-    // (b) bookmark
-    var bm = shapeLayer("Icon Bookmark");
-    var cb = vGroup(bm);
-    pathIn(cb, [[-17, -24], [17, -24], [17, 24], [0, 11], [-17, 24]], true);
-    strokeIn(cb, ICON, LW);
-    setPos(bm, [ix[1], PY]);
+    var more = iconLayer("Glass / Icon More");
+    var cm = vGroup(more); ellipseIn(cm, 6.2, [-16,0]); ellipseIn(cm, 6.2, [0,0]); ellipseIn(cm, 6.2, [16,0]); fillIn(cm, ICON);
+    follow(more, 132, 0);
 
-    // (c) more (ellipsis)
-    var more = shapeLayer("Icon More");
-    var cm = vGroup(more);
-    ellipseIn(cm, 6.2, [-16, 0]);
-    ellipseIn(cm, 6.2, [0, 0]);
-    ellipseIn(cm, 6.2, [16, 0]);
-    fillIn(cm, ICON);
-    setPos(more, [ix[2], PY]);
+    // ============================================================
+    // Controls + Glass null
+    // ============================================================
+    var controls = comp.layers.addNull(DUR); controls.name = "Controls";
+    setPos(controls, [26, 26]);
+    var cFx = controls.property("ADBE Effect Parade");
+    function slider(name, val) { var fx = cFx.addProperty("ADBE Slider Control"); fx.name = name; fx.property(1).setValue(val); return fx; }
+    slider("Frost", 14);
+    slider("Float", 0);
+
+    var glass = comp.layers.addNull(DUR); glass.name = "Glass";
+    setPos(glass, START);
+    setExpr(pos(glass),
+        'var f = thisComp.layer("Controls").effect("Float")("Slider");\n' +
+        '(f > 0) ? [' + (W/2) + ' + Math.cos(time*0.6)*' + (W*0.26) + ', ' + START[1] + '] : value;');
+
+    comp.markerProperty.setValueAtTime(0, new MarkerValue("Drag the 'Glass' null. Put your content BELOW 'Glass / Frost'."));
 
     app.endUndoGroup();
 
-    alert("Liquid Glass Toolbar — build 1 ✨\n\n" +
-          "Comp 'Liquid Glass Toolbar' (900x440):\n" +
-          "green card + frosted pill with add / bookmark / more icons.\n\n" +
-          "Tweak: pill size via PX/PY/PW/PH/PR at the top of the script;\n" +
-          "glass strength via the 'Glass Shading' / 'Top Shade' / 'Bottom Glow'\n" +
-          "layer opacities; backdrop frost via the 'Backdrop Blur' Gaussian.");
+    alert("Liquid Glass Toolbar — build 2 (null-driven) ✨\n\n" +
+          "• Drag the 'Glass' null to move the whole toolbar.\n" +
+          "• 'Glass / Frost' is an ADJUSTMENT layer — it blurs/affects\n" +
+          "  every layer BELOW it inside the capsule. Put your own\n" +
+          "  content on layers below it (above the DEMO layers).\n" +
+          "• 'Controls' null: Frost = blur amount, Float = 1 for auto drift.");
 
 })();
