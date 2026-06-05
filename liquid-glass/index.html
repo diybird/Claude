@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liquid Glass</title>
+<style>
+  html, body { margin: 0; height: 100%; display: grid; place-items: center;
+    background: #0c0c10; font-family: -apple-system, "SF Pro Display", system-ui, sans-serif; }
+  .wrap { text-align: center; }
+  /* the 300x300 UI */
+  #stage { width: 300px; height: 300px; border-radius: 22px; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5); cursor: grab; touch-action: none; }
+  #stage:active { cursor: grabbing; }
+  canvas { display: block; width: 300px; height: 300px; }
+  .hint { color: #6b6b76; font-size: 12px; margin-top: 14px; letter-spacing: .02em; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="stage"><canvas id="c"></canvas></div>
+    <div class="hint">drag the glass &middot; double-click to toggle auto-float</div>
+  </div>
+
+  <script src="lens.js"></script>
+  <script>
+  const SIZE = 300;
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const W = SIZE * dpr, H = SIZE * dpr;
+
+  const canvas = document.getElementById('c');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // ---- offscreen background scene (drawn once) --------------------
+  const bgCanvas = document.createElement('canvas');
+  bgCanvas.width = W; bgCanvas.height = H;
+  const bg = bgCanvas.getContext('2d');
+
+  function drawScene() {
+    bg.save(); bg.scale(dpr, dpr);
+    // light gradient
+    const g = bg.createLinearGradient(0, 0, 0, SIZE);
+    g.addColorStop(0, '#eef0f4'); g.addColorStop(1, '#d6d8df');
+    bg.fillStyle = g; bg.fillRect(0, 0, SIZE, SIZE);
+    // faint grid
+    bg.strokeStyle = 'rgba(150,155,170,.30)'; bg.lineWidth = 1;
+    for (let p = 0; p <= SIZE; p += 40) {
+      bg.beginPath(); bg.moveTo(p + .5, 0); bg.lineTo(p + .5, SIZE); bg.stroke();
+      bg.beginPath(); bg.moveTo(0, p + .5); bg.lineTo(SIZE, p + .5); bg.stroke();
+    }
+    // headline
+    bg.fillStyle = '#1b1b20';
+    bg.font = '700 52px -apple-system, "SF Pro Display", system-ui, sans-serif';
+    bg.textBaseline = 'middle';
+    bg.fillText('Liquid', 30, 120);
+    bg.fillStyle = '#8a8a95';
+    bg.font = '600 30px -apple-system, system-ui, sans-serif';
+    bg.fillText('glass', 150, 165);
+    // a row of brand chips to refract
+    const chips = ['#2262ff', '#18c8b4', '#965aff', '#ff5a78', '#46d25a'];
+    chips.forEach((c, i) => {
+      bg.fillStyle = c;
+      roundRect(bg, 34 + i * 48, 210, 38, 38, 11); bg.fill();
+    });
+    bg.restore();
+  }
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+  drawScene();
+  const bgData = bg.getImageData(0, 0, W, H);   // sampled by the lens
+
+  // ---- lens state -------------------------------------------------
+  const R = 74 * dpr;
+  let lx = W / 2, ly = H / 2;          // current centre
+  let tx = lx, ty = ly;                // target centre
+  let dragging = false, auto = true, t = 0;
+
+  // reusable buffers
+  const lensImg = ctx.createImageData(W, H);
+  const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
+  const tctx = tmp.getContext('2d');
+
+  function frame() {
+    t += 0.016;
+    if (auto && !dragging) {
+      tx = W / 2 + Math.cos(t * 0.7) * (W * 0.22);
+      ty = H / 2 + Math.sin(t * 0.9) * (H * 0.18);
+    }
+    lx += (tx - lx) * 0.18; ly += (ty - ly) * 0.18;   // smooth follow
+
+    // 1. paint the scene
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgCanvas, 0, 0);
+
+    // 2. soft drop shadow under the lens
+    ctx.save();
+    ctx.beginPath(); ctx.arc(lx, ly + 8 * dpr, R + 2 * dpr, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    ctx.filter = `blur(${10 * dpr}px)`; ctx.fill(); ctx.restore();
+
+    // 3. warp the lens region (same math as the offline preview)
+    lensImg.data.fill(0);
+    LiquidLens.render(bgData.data, lensImg.data, W, H, lx, ly, R, {});
+    tctx.putImageData(lensImg, 0, 0);
+    ctx.drawImage(tmp, 0, 0);
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ---- interaction ------------------------------------------------
+  const stage = document.getElementById('stage');
+  function toLocal(e) {
+    const r = canvas.getBoundingClientRect();
+    return [(e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr];
+  }
+  stage.addEventListener('pointerdown', e => {
+    dragging = true; stage.setPointerCapture(e.pointerId);
+    [tx, ty] = toLocal(e);
+  });
+  stage.addEventListener('pointermove', e => { if (dragging) [tx, ty] = toLocal(e); });
+  stage.addEventListener('pointerup', () => { dragging = false; });
+  stage.addEventListener('dblclick', () => { auto = !auto; });
+  </script>
+</body>
+</html>
