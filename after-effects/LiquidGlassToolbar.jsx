@@ -119,7 +119,7 @@
     setPos(controls, [26, 26]);
     var cFx = controls.property("ADBE Effect Parade");
     function slider(name, val) { var fx = cFx.addProperty("ADBE Slider Control"); fx.name = name; fx.property(1).setValue(val); return fx; }
-    slider("Frost", 12); slider("Refract", 100); slider("Float", 0);
+    slider("Frost", 5); slider("Refract", 220); slider("Float", 0);
 
     var glass = comp.layers.addNull(DUR); glass.name = "Glass";
     setPos(glass, START);
@@ -139,7 +139,7 @@
     var height = solid("Glass / Height (map)", [1, 1, 1]);
     var hMask = addMask(height, roundedRectShape(CX, CY, PW, PH, PR), 2);
     setExpr(hMask.property("ADBE Mask Shape"), capsulePathExpr(PW, PH, PR));
-    addGauss(height, 16, true);
+    addGauss(height, 30, true);            // wider slope = wider, stronger refraction band
     height.enabled = false;
 
     // REFRACTION = a DUPLICATE of the content (real pixels -> CC Glass works),
@@ -155,8 +155,8 @@
     if (ccg) {
         distortType = "ccglass"; ccg.name = "EdgeGlass";
         var prp = pn(ccg, ["Property"]);     if (prp) { try { prp.setValue(4); } catch (e) {} } // Alpha
-        var sft = pn(ccg, ["Softness"]);     if (sft) { try { sft.setValue(12); } catch (e) {} }
-        var hgt = pn(ccg, ["Height"]);       if (hgt) { try { hgt.setValue(20); } catch (e) {} }
+        var sft = pn(ccg, ["Softness"]);     if (sft) { try { sft.setValue(8); } catch (e) {} }
+        var hgt = pn(ccg, ["Height"]);       if (hgt) { try { hgt.setValue(70); } catch (e) {} }
         var dsp = pn(ccg, ["Displacement"]); if (dsp) setExpr(dsp, refractExpr);
         try { var lg = ccg.property("Light"); var li = pn(lg, ["Light Intensity"]); if (li) li.setValue(40); } catch (e) {}
         try { var sg = ccg.property("Shading"); var sp = pn(sg, ["Specular"]); if (sp) sp.setValue(10); } catch (e) {}
@@ -220,7 +220,7 @@
     // ============================================================
     try { comp.layer("Glass").moveToBeginning(); comp.layer("Controls").moveToBeginning(); } catch (e) {}
     try {
-        comp.layer("Controls").effect("Refract").property(1).setValue(distortType === "spherize" ? 60 : 100);
+        comp.layer("Controls").effect("Refract").property(1).setValue(distortType === "spherize" ? 90 : 220);
     } catch (e) {}
     if (distortType === "ccglass") {
         try {
@@ -232,7 +232,7 @@
 
     app.endUndoGroup();
 
-    alert("Liquid Glass Toolbar — build 7 (edge refraction, duplicate) ✨\n\n" +
+    alert("Liquid Glass Toolbar — build 8 (stronger refraction) ✨\n\n" +
           "Distortion: " + (distortType ? distortType : "NONE") +
           (distortType === "ccglass" ? " (edge refraction via CC Glass)" : "") + "\n\n" +
           (distortType !== "ccglass" ?
