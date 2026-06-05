@@ -40,6 +40,10 @@
     }
     function addGauss(layer, amt, repeatEdge) {
         var parade = layer.property("ADBE Effect Parade");
+        // Grow Bounds FIRST, or the blur on a tight shape/solid gets clipped
+        // to the layer's bounding box (the "hard white square" bug).
+        try { var gb = parade.addProperty("ADBE Grow Bounds");
+              gb.property(1).setValue(Math.ceil(amt * 3) + 24); } catch (e0) {}
         var fx;
         try { fx = parade.addProperty("ADBE Gaussian Blur 2"); }
         catch (e) { fx = parade.addProperty("ADBE Gaussian Blur"); }
@@ -192,6 +196,7 @@
     setExpr(matte.property("ADBE Transform Group").property("ADBE Scale"),
         'var r = thisComp.layer("Controls").effect("Radius")("Slider");\n' +
         'var s = r / ' + R + ' * 100;\n[s, s];');
+    addGauss(matte, 2.5);                       // feather the refraction edge (soft circle)
     try { refr.setTrackMatte(matte, TrackMatteType.ALPHA); }
     catch (e) { try { matte.moveBefore(refr); refr.trackMatteType = TrackMatteType.ALPHA; } catch (e2) {} }
 
@@ -210,8 +215,8 @@
 
     // drop shadow (sits on the scene, behind the surface highlights)
     var shadow = circle(comp, "Drop Shadow", R * 2, [0,0,0], 100, null, 0, 0);
-    addGauss(shadow, 16); setOp(shadow, 20);
-    follow(shadow, 0, 9); scaleWithRadius(shadow, 105);
+    addGauss(shadow, 22); setOp(shadow, 24);
+    follow(shadow, 0, 11); scaleWithRadius(shadow, 104);
     shadow.moveBefore(bgLayer);                       // below the refraction, on the scene
 
     // chromatic fringe: a red ring nudged one way, a blue ring the other
@@ -230,18 +235,19 @@
     var frost = circle(comp, "Frost", R * 2, [1,1,1], 100, null, 0, 0);
     setOp(frost, 7); follow(frost, 0, 0); scaleWithRadius(frost);
 
-    // bright rim
-    var rim = circle(comp, "Rim", R * 2 - 1, null, null, [1,1,1], 1.5, 65);
-    rim.blendingMode = BlendingMode.ADD; follow(rim, 0, 0); scaleWithRadius(rim);
+    // bright rim (soft, not a hard pencil outline)
+    var rim = circle(comp, "Rim", R * 2 - 1, null, null, [1,1,1], 2.5, 45);
+    rim.blendingMode = BlendingMode.ADD; addGauss(rim, 1.2);
+    follow(rim, 0, 0); scaleWithRadius(rim);
 
-    // inner contact shadow
-    var inner = circle(comp, "Inner Shadow", R * 2 - 10, null, null, [0,0,0], 5, 22);
-    addGauss(inner, 3); follow(inner, 0, 0); scaleWithRadius(inner, 96);
+    // inner contact shadow (faint + soft)
+    var inner = circle(comp, "Inner Shadow", R * 2 - 12, null, null, [0,0,0], 6, 14);
+    addGauss(inner, 6); follow(inner, 0, 0); scaleWithRadius(inner, 95);
 
-    // specular crescent (top-left) + sparkle
-    var spec = circle(comp, "Specular", R * 0.95, [1,1,1], 100, null, 0, 0);
-    addGauss(spec, R * 0.32); spec.blendingMode = BlendingMode.ADD; setOp(spec, 60);
-    follow(spec, -R * 0.42, -R * 0.46); scaleWithRadius(spec);
+    // specular highlight (soft glow, top-left) + sparkle
+    var spec = circle(comp, "Specular", R * 0.9, [1,1,1], 100, null, 0, 0);
+    addGauss(spec, R * 0.34); spec.blendingMode = BlendingMode.ADD; setOp(spec, 65);
+    follow(spec, -R * 0.38, -R * 0.42); scaleWithRadius(spec);
     var spark = circle(comp, "Sparkle", 9, [1,1,1], 100, null, 0, 0);
     addGauss(spark, 3); spark.blendingMode = BlendingMode.ADD; setOp(spark, 90);
     follow(spark, -R * 0.5, -R * 0.5);
