@@ -7,37 +7,39 @@
 <style>
   :root { --r: 999px; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: #050505;
+  html, body { margin: 0; height: 100%; background: #050505; overflow: hidden;
     font-family: -apple-system, "SF Pro Display", system-ui, sans-serif; }
 
-  /* the scene: black bg + green card */
-  .stage { position: fixed; inset: 0; display: grid; place-items: start center;
-    overflow: hidden; }
+  /* scene: black bg + green card */
+  .stage { position: fixed; inset: 0; overflow: hidden; }
   .card { position: absolute; top: 170px; left: 50%; transform: translateX(-50%);
     width: min(840px, 92vw); height: 900px; border-radius: 80px 80px 0 0;
     background:
       radial-gradient(120% 80% at 48% 0%, rgba(255,255,255,.16), transparent 60%),
-      linear-gradient(to bottom, #6cbd4f 0%, #44993a 45%, #2c6b27 100%);
-  }
+      linear-gradient(to bottom, #6cbd4f 0%, #44993a 45%, #2c6b27 100%); }
 
-  /* the glass pill */
-  .pill { position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+  /* holder handles POSITION (dragging) */
+  .holder { position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+    touch-action: none; }
+
+  /* pill handles SIZE (resizing) via scale */
+  .pill { position: relative; transform-origin: 50% 0; cursor: grab;
     display: flex; align-items: center; gap: 14px; padding: 18px 26px;
-    border-radius: var(--r); isolation: isolate; cursor: default;
+    border-radius: var(--r); isolation: isolate;
     background: linear-gradient(to bottom, rgba(255,255,255,.10), rgba(255,255,255,.02));
     backdrop-filter: blur(16px) saturate(150%);
     -webkit-backdrop-filter: blur(16px) saturate(150%);
     border: 1px solid rgba(255,255,255,.16);
     box-shadow:
-      0 16px 36px rgba(0,0,0,.45),                 /* drop shadow */
-      inset 0 14px 22px rgba(0,0,0,.55),           /* dark top edge */
-      inset 0 -14px 26px rgba(255,255,255,.22),    /* bright bottom rim */
+      0 16px 36px rgba(0,0,0,.45),
+      inset 0 14px 22px rgba(0,0,0,.55),
+      inset 0 -14px 26px rgba(255,255,255,.22),
       inset 0 1.5px 0 rgba(255,255,255,.10);
-    animation: rise .6s cubic-bezier(.2,.8,.2,1) both;
-  }
-  @keyframes rise { from { opacity: 0; transform: translateX(-50%) translateY(10px); } }
+    animation: rise .6s cubic-bezier(.2,.8,.2,1) both; }
+  .pill.dragging { cursor: grabbing; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
 
-  /* cursor-tracked specular sheen, clipped to the pill */
+  /* cursor-tracked sheen, clipped to the pill */
   .pill::after { content: ""; position: absolute; inset: 0; border-radius: var(--r);
     pointer-events: none; z-index: 3; opacity: 0; transition: opacity .25s;
     background: radial-gradient(120px 80px at var(--mx,50%) var(--my,30%),
@@ -45,12 +47,11 @@
     mix-blend-mode: screen; }
   .pill:hover::after { opacity: 1; }
 
-  /* sliding selection highlight (the "liquid" bit) */
+  /* sliding selection highlight */
   .sel { position: absolute; top: 50%; left: 0; width: 56px; height: 56px;
     border-radius: 18px; z-index: 0; opacity: 0;
     background: rgba(255,255,255,.16);
     box-shadow: inset 0 1px 1px rgba(255,255,255,.4), 0 2px 8px rgba(0,0,0,.2);
-    backdrop-filter: blur(4px);
     transform: translate(0, -50%) scale(.6);
     transition: transform .42s cubic-bezier(.22,1,.3,1.35), opacity .25s, width .42s cubic-bezier(.22,1,.3,1.35); }
   .sel.show { opacity: 1; }
@@ -73,6 +74,13 @@
     animation: rip .5s ease-out forwards; }
   @keyframes rip { to { transform: scale(2.4); opacity: 0; } }
 
+  /* resize handle (bottom-right) */
+  .handle { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px;
+    z-index: 5; cursor: nwse-resize; border-radius: 50%; opacity: 0;
+    background: rgba(255,255,255,.9);
+    box-shadow: 0 2px 6px rgba(0,0,0,.4); transition: opacity .2s; touch-action: none; }
+  .pill:hover .handle { opacity: .85; }
+
   .hint { position: fixed; bottom: 22px; width: 100%; text-align: center;
     color: rgba(255,255,255,.35); font-size: 13px; letter-spacing: .02em; }
 </style>
@@ -81,51 +89,44 @@
   <div class="stage">
     <div class="card"></div>
 
-    <div class="pill" id="pill">
-      <div class="sel" id="sel"></div>
+    <div class="holder" id="holder">
+      <div class="pill" id="pill">
+        <div class="sel" id="sel"></div>
 
-      <button class="icon" aria-label="Add">
-        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/>
-          <line x1="12" y1="9.5" x2="12" y2="14.5"/><line x1="9.5" y1="12" x2="14.5" y2="12"/></svg>
-      </button>
+        <button class="icon" aria-label="Add">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/>
+            <line x1="12" y1="9.5" x2="12" y2="14.5"/><line x1="9.5" y1="12" x2="14.5" y2="12"/></svg>
+        </button>
+        <button class="icon" aria-label="Bookmark">
+          <svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg>
+        </button>
+        <button class="icon" aria-label="More">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <circle cx="6" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18" cy="12" r="1.7"/></svg>
+        </button>
 
-      <button class="icon" aria-label="Bookmark">
-        <svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg>
-      </button>
-
-      <button class="icon" aria-label="More">
-        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          <circle cx="6" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18" cy="12" r="1.7"/></svg>
-      </button>
+        <div class="handle" id="handle" title="Drag to resize"></div>
+      </div>
     </div>
   </div>
-  <div class="hint">hover the icons &middot; the highlight follows &middot; click for a ripple</div>
+  <div class="hint">drag the bar to move &middot; corner dot to resize &middot; tap an icon</div>
 
   <script>
-    const pill = document.getElementById('pill');
-    const sel  = document.getElementById('sel');
-    const icons = [...pill.querySelectorAll('.icon')];
+    const holder = document.getElementById('holder');
+    const pill   = document.getElementById('pill');
+    const sel    = document.getElementById('sel');
+    const handle = document.getElementById('handle');
+    const icons  = [...pill.querySelectorAll('.icon')];
 
-    // move the liquid selection behind the hovered icon
-    function moveSelTo(btn) {
-      sel.classList.add('show');
-      sel.style.width = btn.offsetWidth + 'px';
-      sel.style.transform =
-        `translate(${btn.offsetLeft}px, -50%) scale(1)`;
-    }
+    let scale = 1;
+    const applyScale = () => pill.style.transform = `scale(${scale})`;
+
+    // ---- selection highlight on hover ----
     icons.forEach(btn => {
-      btn.addEventListener('pointerenter', () => moveSelTo(btn));
-      // press ripple
-      btn.addEventListener('pointerdown', e => {
-        const r = document.createElement('span');
-        r.className = 'ripple';
-        const rect = btn.getBoundingClientRect();
-        const d = Math.max(rect.width, rect.height);
-        r.style.width = r.style.height = d + 'px';
-        r.style.left = (e.clientX - rect.left - d / 2) + 'px';
-        r.style.top  = (e.clientY - rect.top  - d / 2) + 'px';
-        btn.appendChild(r);
-        setTimeout(() => r.remove(), 500);
+      btn.addEventListener('pointerenter', () => {
+        sel.classList.add('show');
+        sel.style.width = btn.offsetWidth + 'px';
+        sel.style.transform = `translate(${btn.offsetLeft}px, -50%) scale(1)`;
       });
     });
     pill.addEventListener('pointerleave', () => {
@@ -133,12 +134,74 @@
       sel.style.transform = sel.style.transform.replace('scale(1)', 'scale(.6)');
     });
 
-    // cursor-tracked sheen
+    // ---- cursor-tracked sheen ----
     pill.addEventListener('pointermove', e => {
       const r = pill.getBoundingClientRect();
       pill.style.setProperty('--mx', ((e.clientX - r.left) / r.width  * 100) + '%');
       pill.style.setProperty('--my', ((e.clientY - r.top)  / r.height * 100) + '%');
     });
+
+    // ---- DRAG (move) with tap-vs-drag detection ----
+    let drag = null, moved = false;
+    function centerToPx() {                       // freeze current centered pos into left/top px
+      const hr = holder.getBoundingClientRect();
+      holder.style.left = hr.left + 'px';
+      holder.style.top  = hr.top + 'px';
+      holder.style.transform = 'none';
+    }
+    pill.addEventListener('pointerdown', e => {
+      if (e.target === handle) return;            // handle does its own thing
+      const hr = holder.getBoundingClientRect();
+      drag = { px: e.clientX, py: e.clientY, ox: e.clientX - hr.left, oy: e.clientY - hr.top };
+      moved = false;
+      pill.setPointerCapture(e.pointerId);
+    });
+    pill.addEventListener('pointermove', e => {
+      if (!drag) return;
+      if (!moved && Math.hypot(e.clientX - drag.px, e.clientY - drag.py) > 5) {
+        moved = true; centerToPx(); pill.classList.add('dragging');
+      }
+      if (moved) {
+        holder.style.left = (e.clientX - drag.ox) + 'px';
+        holder.style.top  = (e.clientY - drag.oy) + 'px';
+      }
+    });
+    pill.addEventListener('pointerup', e => {
+      const btn = e.target.closest('.icon');
+      if (drag && !moved && btn) ripple(btn, e);   // it was a tap, not a drag
+      drag = null; pill.classList.remove('dragging');
+    });
+
+    // ---- RESIZE (scale) ----
+    handle.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      const start = { x: e.clientX, s: scale };
+      handle.setPointerCapture(e.pointerId);
+      const onMove = ev => {
+        scale = Math.min(2.2, Math.max(0.6, start.s + (ev.clientX - start.x) / 180));
+        applyScale();
+      };
+      const onUp = ev => {
+        handle.releasePointerCapture(e.pointerId);
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+      };
+      handle.addEventListener('pointermove', onMove);
+      handle.addEventListener('pointerup', onUp);
+    });
+
+    // ---- ripple on tap ----
+    function ripple(btn, e) {
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      const rect = btn.getBoundingClientRect();
+      const d = Math.max(rect.width, rect.height) / scale;
+      r.style.width = r.style.height = d + 'px';
+      r.style.left = ((e.clientX - rect.left) / scale - d / 2) + 'px';
+      r.style.top  = ((e.clientY - rect.top)  / scale - d / 2) + 'px';
+      btn.appendChild(r);
+      setTimeout(() => r.remove(), 500);
+    }
   </script>
 </body>
 </html>
