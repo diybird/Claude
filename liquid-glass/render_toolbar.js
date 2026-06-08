@@ -41,7 +41,7 @@ function boxBlur(src,radius,passes){let cur=src;for(let p=0;p<passes;p++){const 
     for(let x=0;x<W;x++){tmp[I(x,y)+c]=acc/n;acc+=cur[I(clamp(x+radius+1,0,W-1),y)+c]-cur[I(clamp(x-radius,0,W-1),y)+c];}}
   for(let x=0;x<W;x++)for(let c=0;c<3;c++){let acc=0;const n=radius*2+1;for(let y=-radius;y<=radius;y++)acc+=tmp[I(x,clamp(y,0,H-1))+c];
     for(let y=0;y<H;y++){o2[I(x,y)+c]=acc/n;acc+=tmp[I(x,clamp(y+radius+1,0,H-1))+c]-tmp[I(x,clamp(y-radius,0,H-1))+c];}}cur=o2;}return cur;}
-const blurred = boxBlur(bg.slice(), 22, 3);
+const blurred = boxBlur(bg.slice(), 26, 3);
 
 // ---------------- composite ----------------
 out.set(bg);
@@ -52,25 +52,8 @@ for(let y=cap.cy-110;y<cap.cy+150;y++)for(let x=cap.cx-260;x<cap.cx+260;x++){
   const a=clamp(-s/26,0,1)*0.32; if(a>0){const i=I(x,y);out[i]=lerp(out[i],0,a);out[i+1]=lerp(out[i+1],0,a);out[i+2]=lerp(out[i+2],0,a);}}
 // the glass
 const glassBuf = new Float64Array(W*H*4);
-LiquidGlass.render(bg, blurred, glassBuf, W, H, cap, {});
+LiquidGlass.render(bg, blurred, glassBuf, W, H, cap, { frost: 0.58 });
 for(let i=0;i<W*H;i++){const a=glassBuf[i*4+3]/255; if(a>0)for(let c=0;c<3;c++)out[i*4+c]=lerp(out[i*4+c],glassBuf[i*4+c],a);}
-
-// icons (white strokes)
-function seg(ax,ay,bx,by,wid){for(let y=Math.floor(Math.min(ay,by)-wid);y<Math.ceil(Math.max(ay,by)+wid);y++)
-  for(let x=Math.floor(Math.min(ax,bx)-wid);x<Math.ceil(Math.max(ax,bx)+wid);x++){
-    const vx=bx-ax,vy=by-ay,wx=x+.5-ax,wy=y+.5-ay;let t=clamp((wx*vx+wy*vy)/(vx*vx+vy*vy),0,1);
-    const dd=Math.hypot(x+.5-(ax+vx*t),y+.5-(ay+vy*t)),a=clamp(wid/2-dd+.5,0,1);
-    if(a>0){const i=I(x,y);out[i]=lerp(out[i],255,a);out[i+1]=lerp(out[i+1],255,a);out[i+2]=lerp(out[i+2],255,a);}}}
-function strokeRR(cx,cy,w,h,r,wid){for(let y=Math.floor(cy-h/2-wid);y<Math.ceil(cy+h/2+wid);y++)
-  for(let x=Math.floor(cx-w/2-wid);x<Math.ceil(cx+w/2+wid);x++){
-    const a=clamp(wid/2-Math.abs(rrSDF(x+.5,y+.5,cx,cy,w,h,r))+.5,0,1);
-    if(a>0){const i=I(x,y);out[i]=lerp(out[i],255,a);out[i+1]=lerp(out[i+1],255,a);out[i+2]=lerp(out[i+2],255,a);}}}
-function dot(cx,cy,rad){for(let y=Math.floor(cy-rad-1);y<Math.ceil(cy+rad+1);y++)for(let x=Math.floor(cx-rad-1);x<Math.ceil(cx+rad+1);x++){
-  const a=clamp(rad-Math.hypot(x+.5-cx,y+.5-cy)+.5,0,1);if(a>0){const i=I(x,y);out[i]=lerp(out[i],255,a);out[i+1]=lerp(out[i+1],255,a);out[i+2]=lerp(out[i+2],255,a);}}}
-const iy=196, lw=3.2; const X=[450-132,450,450+132];
-strokeRR(X[0],iy,52,42,11,lw); seg(X[0]-11,iy,X[0]+11,iy,lw); seg(X[0],iy-11,X[0],iy+11,lw);
-seg(X[1]-17,iy-24,X[1]+17,iy-24,lw); seg(X[1]-17,iy-24,X[1]-17,iy+24,lw); seg(X[1]+17,iy-24,X[1]+17,iy+24,lw); seg(X[1]-17,iy+24,X[1],iy+11,lw); seg(X[1]+17,iy+24,X[1],iy+11,lw);
-for(const dx of [-16,0,16]) dot(X[2]+dx,iy,3.1);
 
 // ---------------- PNG ----------------
 const raw=Buffer.alloc((W*3+1)*H);let p=0;
