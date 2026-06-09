@@ -12,12 +12,29 @@
     box-shadow:0 20px 60px rgba(0,0,0,.5)}
   canvas:active{cursor:grabbing}
   .hint{color:#5a5a62;font-size:13px;margin-top:14px;letter-spacing:.02em}
+  .controls{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-top:18px;
+    padding:14px 18px;border-radius:14px;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08)}
+  .controls label{display:flex;flex-direction:column;gap:6px;color:#b8b8c0;font-size:12px;
+    letter-spacing:.03em;text-transform:uppercase;min-width:130px}
+  .controls .row{display:flex;justify-content:space-between;color:#7d7d86}
+  .controls input[type=range]{width:140px;accent-color:#46d25a;cursor:pointer}
 </style>
 </head>
 <body>
   <div class="wrap">
     <canvas id="c" width="900" height="440"></canvas>
-    <div class="hint">drag the glass bar &middot; it refracts whatever passes under the rim</div>
+    <div class="hint">drag the glass bar &middot; use the sliders to tune the material</div>
+    <div class="controls">
+      <label>Blur <div class="row"><span>soft</span><b id="blurv">26</b></div>
+        <input type="range" id="blur" min="0" max="60" step="1" value="26"></label>
+      <label>Frost <div class="row"><span>milky</span><b id="frostv">0.58</b></div>
+        <input type="range" id="frost" min="0" max="1" step="0.02" value="0.58"></label>
+      <label>Refraction <div class="row"><span>IOR</span><b id="iorv">1.70</b></div>
+        <input type="range" id="ior" min="1" max="3" step="0.05" value="1.7"></label>
+      <label>Chromatic <div class="row"><span>dispersion</span><b id="cav">0.22</b></div>
+        <input type="range" id="ca" min="0" max="0.5" step="0.01" value="0.22"></label>
+    </div>
   </div>
 
   <script src="glass.js"></script>
@@ -57,7 +74,8 @@
         for(let y=0;y<H;y++){o[idx(x,y)+c]=acc/n;acc+=tmp[idx(x,cl(y+radius+1,0,H-1))+c]-tmp[idx(x,cl(y-radius,0,H-1))+c];}}cur=o;}
     const out=new Uint8ClampedArray(cur.length); for(let i=0;i<cur.length;i++)out[i]=cur[i]; return out;
   }
-  const blurred = boxBlur(bgData, 26, 3);
+  const state = { blur: 26, frost: 0.58, ior: 1.7, ca: 0.22 };
+  let blurred = boxBlur(bgData, state.blur, 3);
 
   // ---- glass state ----
   const cap = {cx:450, cy:196, w:436, h:132, r:66};
@@ -87,12 +105,24 @@
     roundRect(ctx,cap.cx-cap.w/2,cap.cy-cap.h/2+12,cap.w,cap.h,cap.r); ctx.fill(); ctx.restore();
     // refraction
     outImg.data.fill(0);
-    LiquidGlass.render(bgData, blurred, outImg.data, W, H, cap, { frost: 0.58 });
+    LiquidGlass.render(bgData, blurred, outImg.data, W, H, cap, { frost: state.frost, ior: state.ior, ca: state.ca });
     tctx.putImageData(outImg,0,0);
     ctx.drawImage(tmp,0,0);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
+  // ---- control sliders ----
+  function bind(id, key, after){
+    const el=document.getElementById(id), out=document.getElementById(id+'v');
+    el.addEventListener('input', ()=>{
+      state[key]=parseFloat(el.value);
+      out.textContent = (key==='blur') ? el.value : parseFloat(el.value).toFixed(2);
+      if(after) after();
+    });
+  }
+  bind('blur','blur', ()=>{ blurred = boxBlur(bgData, state.blur, 3); });
+  bind('frost','frost'); bind('ior','ior'); bind('ca','ca');
 
   // ---- drag ----
   let drag=null;
