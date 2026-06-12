@@ -1,81 +1,103 @@
 # Tracer for After Effects
 
-A dockable ScriptUI panel that connects null (or any) layers with a **live,
-expression-driven shape-layer path** — inspired by the **Tracer** object in
-Cinema 4D. The generated path reads each source layer's position every frame,
-so the connection follows the nulls as they move and animate.
+A Cinema 4D **Tracer**-style rig for After Effects. It builds a shape layer
+whose path is driven by a single **live expression** that reads **Expression
+Controls** in the Effect Controls panel — so you configure it just like C4D's
+Tracer object, with a **Trace Link** list and a **SPLINE** group.
 
-## Features
+The path follows the linked layers every frame, like C4D's Tracer.
 
-- **Live connection** — path is driven by an expression; move a null and the
-  line follows. No re-running needed.
-- **Order control** — connect in the order you selected the layers, or in
-  timeline (stacking) order.
-- **Open or closed** path, with optional **fill** for closed shapes.
-- **Smooth / curved** mode (Catmull-Rom-style tangents) with adjustable
-  **tension**, or straight segments.
-- **Stroke width + color** controls.
-- **Update** an existing Tracer in place (re-select it, optionally with new
-  source layers).
-- **Bake** the live result into keyframes when you want it static / faster.
+## The Effect Controls UI (matches the C4D panel)
 
-## Install
+Once you create a tracer, its Effect Controls panel shows:
 
-Copy `Tracer.jsx` into the **ScriptUI Panels** folder:
+**TRACER**
+- **Tracing Mode** — dropdown (currently `Connect All Objects`)
+- **Trace Active** — checkbox; off = empty path
+- **Reverse Sequence** — checkbox; reverses link order
 
-- **Windows:**
-  `C:\Program Files\Adobe\Adobe After Effects <version>\Support Files\Scripts\ScriptUI Panels\`
-- **macOS:**
-  `/Applications/Adobe After Effects <version>/Scripts/ScriptUI Panels/`
+**SPLINE**
+- **Type** — `Linear` / `Cubic` / `B-Spline`
+- **Close Spline** — checkbox
+- **Interpolation** — `None / Natural / Uniform / Automatic / Subdivided`
+- **Points** — B-Spline resolution (samples per span)
+- **Tension** — curvature for `Cubic`
+- **Angle**, **Max Length** — parity controls (see *Status* below)
 
-Restart After Effects. The panel appears under the **Window** menu as
-`Tracer.jsx` and can be docked like any panel.
+**Trace Link**
+- **Trace Link 1 … N** — one **Layer Control** per source. This is the AE
+  equivalent of C4D's Trace Link list. Pick a layer in each, set extras to
+  *None*. Add/remove rows freely — the expression auto-discovers any effect
+  named `Trace Link …`.
 
-> First run: enable **Preferences → Scripting & Expressions → Allow Scripts to
-> Write Files and Access Network** if AE prompts about scripting permissions.
+### What's fully wired vs. parity-only
 
-You can also run it ad-hoc via **File → Scripts → Run Script File…**, in which
-case it opens as a floating window instead of a dockable panel.
+| Control | Status |
+|---|---|
+| Trace Link list, Trace Active, Reverse Sequence | ✅ functional |
+| Type (Linear / Cubic / B-Spline), Close Spline | ✅ functional |
+| Points (B-Spline resolution), Tension | ✅ functional |
+| Tracing Mode, Interpolation, Angle, Max Length | ⚪ present for C4D parity, not yet driving the path |
 
-## Usage
+The parity controls exist so the panel matches the C4D layout and so a saved
+preset is forward-compatible. Wiring them up (adaptive subdivision via
+Angle/Max Length, true Bezier/Akima types) is a straightforward next step.
 
-1. Open a composition and create/select your null layers.
-2. **Select 2 or more layers** in the order you want them joined
-   (or enable *Use timeline order*).
-3. Set options (close, smooth, tension, stroke), then click **Connect Selected**.
-4. A `Tracer (N)` shape layer is created and stays linked to the sources.
+> C4D-only options (Sample Step, Trace Vertices, Use TP Subgroups, Handle
+> Cloners, Include Cloner) are omitted — they depend on Thinking Particles /
+> Cloners / MoGraph, which have no After Effects equivalent.
 
-### Updating
+## Use it as a builder (script)
 
-- Select the **Tracer layer + any new source layers** and click **Update** to
-  rebuild the connection with the new set.
-- Select **only the Tracer layer** and click **Update / Connect** to refresh
-  styling/options using its stored sources.
+Install: copy `Tracer.jsx` into the **ScriptUI Panels** folder…
 
-### Baking
+- **Windows:** `…\Adobe After Effects <ver>\Support Files\Scripts\ScriptUI Panels\`
+- **macOS:** `/Applications/Adobe After Effects <ver>/Scripts/ScriptUI Panels/`
 
-Select the Tracer layer and click **Bake** to convert the live expression into
-per-frame keyframes (removes the expression). Useful for handoff or heavy comps.
+…restart AE, open it from the **Window** menu (or run via **File → Scripts →
+Run Script File…** for a floating window). Then:
+
+- **Create Tracer from Selection** — select 2+ layers (in join order) → builds
+  the tracer + control rig + Trace Link rows.
+- **Add Selected as Links** — select a tracer + new layers → appends Trace Link rows.
+- **Re-apply Expr** — restore the path expression if it was edited/removed.
+- **Bake** — convert the live path to per-frame keyframes (removes expression).
+
+## Use it as an Effect & Preset (`.ffx`)
+
+After Effects has **no scripting API to write `.ffx` files**, so the rig is
+packaged as a preset with one manual save (done once):
+
+1. Build a tracer with the script.
+2. In the **Effect Controls** panel, select all of its effects.
+3. In the **Timeline**, also select the **Path** property (it carries the
+   expression) — and the stroke if you want styling included.
+4. **Animation → Save Animation Preset…** and save into your
+   *User Presets* / *Effects & Presets* folder.
+
+It now appears in the **Effects & Presets** panel and can be dropped onto any
+shape layer. (You still pick the source layers per Trace Link after applying,
+since layer references can't be baked into a generic preset.)
 
 ## How it works
 
-The path property gets an expression that, for each source layer name, computes
-its comp-space anchor position and maps it into the shape layer's space:
+Each frame the expression collects every `Trace Link` Layer Control, reads the
+linked layer's comp-space anchor, maps it into the tracer's space, and builds
+the path:
 
 ```js
 pts.push(fromComp(L.toComp(L.transform.anchorPoint)));
+// …then per Type: Linear (polyline), Cubic (Catmull-Rom tangents),
+// or B-Spline (uniform cubic, resampled to `Points` per span)…
+createPath(V, inTangents, outTangents, isClosed);
 ```
-
-then feeds the points to `createPath(pts, inTangents, outTangents, closed)`.
-Smooth mode derives tangents from neighboring points scaled by `tension`.
-
-Source layers are referenced **by name**, so avoid duplicate layer names in the
-same comp. The names are stored inside the expression, which is also how
-*Update* recovers them.
 
 ## Notes / limits
 
+- Layer Controls reference layers **by index**, so reordering layers can shift a
+  link; renaming is safe.
 - 3D nulls are projected to 2D (screen position) — intended for 2D line work.
-- Renaming a source layer breaks the reference; re-select and **Update**.
-- Tested conceptually against the AE ExtendScript API (AE 2020+). The shape
-  property match-names used are standard across modern versions.
+- Open B-Spline needs **4+ points** for a true curve; fewer falls back to a
+  polyline. It approximates (doesn't pass through) control points, by design.
+- Built against the AE ExtendScript API (AE 2020+; Dropdown Menu Control
+  requires AE 17.0.1+). Not live-tested inside AE in this environment.
