@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracer — 3D Preview</title>
+<style>
+  :root{
+    --bg:#16181c; --panel:#1f2228; --panel2:#272b32; --line:#33373f;
+    --txt:#d7dbe2; --muted:#8b929d; --accent:#22d8ff; --accent2:#7a5cff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);
+    font:13px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .app{display:flex;height:100vh;overflow:hidden}
+  .stage{flex:1;position:relative;min-width:0}
+  canvas{display:block;width:100%;height:100%;cursor:grab}
+  canvas.drag{cursor:grabbing}
+  .hud{position:absolute;left:12px;top:12px;color:var(--muted);
+    font-size:12px;pointer-events:none;text-shadow:0 1px 2px #000}
+  .hud b{color:var(--txt)}
+  .side{width:280px;background:var(--panel);border-left:1px solid var(--line);
+    padding:14px;overflow:auto}
+  .side h1{font-size:14px;margin:0 0 2px;letter-spacing:.3px}
+  .side .sub{color:var(--muted);font-size:11px;margin:0 0 14px}
+  .grp{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;margin-bottom:12px}
+  .grp h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 10px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin:8px 0}
+  .row label{color:var(--txt)}
+  .row .val{color:var(--accent);font-variant-numeric:tabular-nums;min-width:34px;
+    text-align:right}
+  input[type=range]{width:120px;accent-color:var(--accent)}
+  select,input[type=number]{background:#14161a;color:var(--txt);
+    border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:130px}
+  input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  button{flex:1;background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    border-radius:6px;padding:7px 8px;cursor:pointer;font-size:12px}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:linear-gradient(180deg,#2a90ff22,#2a90ff10);
+    border-color:#2a6cff66}
+  .swatch{width:26px;height:20px;border-radius:4px;border:1px solid var(--line);
+    padding:0;flex:0 0 auto}
+  .foot{color:var(--muted);font-size:11px;margin-top:6px}
+  .pill{display:inline-block;background:#0e1013;border:1px solid var(--line);
+    border-radius:20px;padding:1px 8px;color:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div class="hud">
+      <div><b>Tracer</b> — 3D preview</div>
+      <div>drag: orbit &nbsp;·&nbsp; wheel: zoom &nbsp;·&nbsp; shift+drag: pan</div>
+      <div id="stat" class="pill" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tracer</h1>
+    <p class="sub">Connect nulls in 3D — preview of the AE tool</p>
+
+    <div class="grp">
+      <h2>Tracer</h2>
+      <div class="row"><label>Trace Active</label>
+        <input type="checkbox" id="active" checked></div>
+      <div class="row"><label>Reverse Sequence</label>
+        <input type="checkbox" id="reverse"></div>
+      <div class="row"><label>Nulls</label>
+        <input type="range" id="count" min="2" max="16" value="7">
+        <span class="val" id="countV">7</span></div>
+    </div>
+
+    <div class="grp">
+      <h2>Spline</h2>
+      <div class="row"><label>Type</label>
+        <select id="type">
+          <option value="linear">Linear</option>
+          <option value="cubic" selected>Cubic</option>
+          <option value="bspline">B-Spline</option>
+        </select></div>
+      <div class="row"><label>Close Spline</label>
+        <input type="checkbox" id="closed"></div>
+      <div class="row"><label>Points</label>
+        <input type="range" id="points" min="1" max="32" value="10">
+        <span class="val" id="pointsV">10</span></div>
+      <div class="row"><label>Tension</label>
+        <input type="range" id="tension" min="0" max="2" step="0.05" value="0.5">
+        <span class="val" id="tensionV">0.5</span></div>
+      <div class="row"><label>Stroke</label>
+        <input type="range" id="width" min="1" max="12" value="4">
+        <span class="val" id="widthV">4</span></div>
+      <div class="row"><label>Color</label>
+        <input type="color" id="color" class="swatch" value="#22d8ff"></div>
+    </div>
+
+    <div class="grp">
+      <h2>Scene</h2>
+      <div class="row"><label>Animate nulls</label>
+        <input type="checkbox" id="anim" checked></div>
+      <div class="row"><label>Show null icons</label>
+        <input type="checkbox" id="icons" checked></div>
+      <div class="row"><label>Show grid</label>
+        <input type="checkbox" id="grid" checked></div>
+      <div class="btns" style="margin-top:10px">
+        <button id="reseed">Reseed</button>
+        <button id="resetView">Reset view</button>
+      </div>
+    </div>
+
+    <p class="foot">The spline is computed in screen space from the camera-
+      projected null positions — exactly what the After Effects path
+      expression does. Orbit to confirm the line tracks the nulls in 3D.</p>
+  </aside>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  var stat = document.getElementById("stat");
+
+  // ---- UI state ----
+  var ui = {};
+  function bind(id){ return document.getElementById(id); }
+  ["active","reverse","closed","anim","icons","grid"].forEach(function(id){
+    ui[id]=bind(id);
+  });
+  ["type","color"].forEach(function(id){ ui[id]=bind(id); });
+  // ranges with live readout
+  [["count","countV",0],["points","pointsV",0],
+   ["tension","tensionV",2],["width","widthV",0]].forEach(function(r){
+    var el=bind(r[0]), out=bind(r[1]);
+    function upd(){ out.textContent = (+el.value).toFixed(r[2]); }
+    el.addEventListener("input",upd); upd(); ui[r[0]]=el;
+  });
+  bind("count").addEventListener("input", reseed);
+  bind("reseed").addEventListener("click", reseed);
+  bind("resetView").addEventListener("click", resetView);
+
+  // ---- camera ----
+  var cam = { yaw:0.7, pitch:0.5, dist:11, panX:0, panY:0, focal:900 };
+  function resetView(){ cam.yaw=0.7; cam.pitch=0.5; cam.dist=11; cam.panX=0; cam.panY=0; }
+
+  // ---- nulls (3D points with animation params) ----
+  var nulls = [];
+  function reseed(){
+    var n = +ui.count.value;
+    nulls = [];
+    for (var i=0;i<n;i++){
+      // base position on a loose 3D spiral inside a cube
+      var a = i/Math.max(1,n-1);
+      var ang = a*Math.PI*2.2;
+      nulls.push({
+        bx:(Math.random()*2-1)*3 + Math.cos(ang)*2.2,
+        by:(a*2-1)*2.6,
+        bz:(Math.random()*2-1)*3 + Math.sin(ang)*2.2,
+        px:Math.random()*Math.PI*2, py:Math.random()*Math.PI*2, pz:Math.random()*Math.PI*2,
+        ax:0.6+Math.random()*0.8, ay:0.5+Math.random()*0.7, az:0.6+Math.random()*0.8
+      });
+    }
+  }
+
+  // ---- 3D -> screen projection (matches AE toComp: active-camera screen) ----
+  function project(p){
+    var cy=Math.cos(cam.yaw), sy=Math.sin(cam.yaw);
+    var x = p.x*cy - p.z*sy;
+    var z = p.x*sy + p.z*cy;
+    var y = p.y;
+    var cp=Math.cos(cam.pitch), sp=Math.sin(cam.pitch);
+    var y2 = y*cp - z*sp;
+    var z2 = y*sp + z*cp + cam.dist;
+    var behind = z2 <= 0.05;
+    if (z2 < 0.05) z2 = 0.05;
+    var f = cam.focal;
+    return {
+      x: canvas._w/2 + cam.panX + (x*f)/z2,
+      y: canvas._h/2 + cam.panY - (y2*f)/z2,
+      depth: z2, behind: behind
+    };
+  }
+
+  // ---- spline math (identical logic to the AE path expression) ----
+  function sub(a,b){ return [a[0]-b[0], a[1]-b[1]]; }
+  function add(a,b){ return [a[0]+b[0], a[1]+b[1]]; }
+  function mul(a,s){ return [a[0]*s, a[1]*s]; }
+
+  function strokeSpline(P, type, closed, res, tension){
+    var n = P.length;
+    if (n < 2) return;
+    ctx.beginPath();
+    if (type === "linear"){
+      ctx.moveTo(P[0][0],P[0][1]);
+      for (var i=1;i<n;i++) ctx.lineTo(P[i][0],P[i][1]);
+      if (closed) ctx.closePath();
+    } else if (type === "cubic"){
+      // Catmull-Rom -> bezier handles, same tangents as the AE expression
+      ctx.moveTo(P[0][0],P[0][1]);
+      var count = closed ? n : n-1;
+      for (var i=0;i<count;i++){
+        var p0=P[(i-1+n)%n], p1=P[i], p2=P[(i+1)%n], p3=P[(i+2)%n];
+        if(!closed){ if(i===0)p0=p1; if(i===count-1)p3=p2; }
+        var out1 = mul(sub(p2,p0), tension*0.5);
+        var in2  = mul(sub(p3,p1), tension*0.5);
+        var c1 = add(p1,out1);
+        var c2 = sub(p2,in2);
+        ctx.bezierCurveTo(c1[0],c1[1],c2[0],c2[1],p2[0],p2[1]);
+      }
+      if (closed) ctx.closePath();
+    } else { // bspline (uniform cubic), resampled to `res` per span
+      var cp = closed ? P.concat([P[0],P[1],P[2]]) : P;
+      var segs = closed ? n : (cp.length-3);
+      var V=[];
+      for (var s=0;s<segs;s++){
+        var Q0=cp[s],Q1=cp[s+1],Q2=cp[s+2],Q3=cp[s+3];
+        for (var k=0;k<res;k++){
+          var t=k/res,t2=t*t,t3=t2*t;
+          var b0=(-t3+3*t2-3*t+1)/6, b1=(3*t3-6*t2+4)/6,
+              b2=(-3*t3+3*t2+3*t+1)/6, b3=t3/6;
+          V.push([Q0[0]*b0+Q1[0]*b1+Q2[0]*b2+Q3[0]*b3,
+                  Q0[1]*b0+Q1[1]*b1+Q2[1]*b2+Q3[1]*b3]);
+        }
+      }
+      if (V.length<2) V=P;
+      ctx.moveTo(V[0][0],V[0][1]);
+      for (var i=1;i<V.length;i++) ctx.lineTo(V[i][0],V[i][1]);
+      if (closed) ctx.closePath();
+    }
+    ctx.stroke();
+  }
+
+  // ---- scene helpers ----
+  function drawGrid(){
+    var N=10, step=1, half=N*step/2;
+    ctx.lineWidth=1;
+    for (var i=0;i<=N;i++){
+      var t=-half+i*step;
+      seg({x:-half,y:0,z:t},{x:half,y:0,z:t});
+      seg({x:t,y:0,z:-half},{x:t,y:0,z:half});
+    }
+    function seg(a,b){
+      var pa=project(a), pb=project(b);
+      if (pa.behind||pb.behind) return;
+      ctx.strokeStyle = (a.x===0||a.z===0||b.x===0||b.z===0)?"#3a3f48":"#262a31";
+      ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke();
+    }
+  }
+
+  function drawNullIcon(s, label){
+    var r=7;
+    ctx.strokeStyle="#cfd5de"; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(s.x-r,s.y); ctx.lineTo(s.x+r,s.y);
+    ctx.moveTo(s.x,s.y-r); ctx.lineTo(s.x,s.y+r);
+    ctx.stroke();
+    ctx.fillStyle="#aeb6c2"; ctx.font="10px sans-serif";
+    ctx.fillText(label, s.x+9, s.y-7);
+  }
+
+  // ---- main loop ----
+  var t0 = performance.now();
+  function frame(now){
+    var time = (now - t0)/1000;
+    fit();
+    ctx.clearRect(0,0,canvas._w,canvas._h);
+
+    // animate
+    var animate = ui.anim.checked;
+    var pts3 = nulls.map(function(d){
+      var x=d.bx, y=d.by, z=d.bz;
+      if (animate){
+        x += Math.sin(time*d.ax + d.px)*0.8;
+        y += Math.sin(time*d.ay + d.py)*0.6;
+        z += Math.cos(time*d.az + d.pz)*0.8;
+      }
+      return {x:x,y:y,z:z};
+    });
+
+    if (ui.grid.checked) drawGrid();
+
+    // project
+    var screen = pts3.map(project);
+    var order = pts3.map(function(_,i){return i;});
+
+    // spline order (reverse option)
+    var seq = order.slice();
+    if (ui.reverse.checked) seq.reverse();
+    var P = seq.map(function(i){ return [screen[i].x, screen[i].y]; });
+
+    // draw spline
+    if (ui.active.checked && P.length>=2){
+      ctx.lineJoin="round"; ctx.lineCap="round";
+      ctx.strokeStyle = ui.color.value;
+      ctx.lineWidth = +ui.width.value;
+      ctx.shadowColor = ui.color.value; ctx.shadowBlur = 8;
+      strokeSpline(P, ui.type.value, ui.closed.checked,
+                   Math.max(1, +ui.points.value), +ui.tension.value);
+      ctx.shadowBlur = 0;
+    }
+
+    // draw null icons (sorted back-to-front for nicer overlap)
+    if (ui.icons.checked){
+      order.sort(function(a,b){ return screen[b].depth - screen[a].depth; });
+      order.forEach(function(i){
+        if (!screen[i].behind) drawNullIcon(screen[i], "Null "+(i+1));
+      });
+    }
+
+    stat.textContent = nulls.length + " nulls · " + ui.type.value +
+      (ui.closed.checked?" · closed":"") + " · dist " + cam.dist.toFixed(1);
+    requestAnimationFrame(frame);
+  }
+
+  // ---- canvas sizing ----
+  function fit(){
+    var dpr = window.devicePixelRatio||1;
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== w*dpr || canvas.height !== h*dpr){
+      canvas.width=w*dpr; canvas.height=h*dpr;
+    }
+    canvas._w=w; canvas._h=h;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  // ---- interaction ----
+  var drag=null;
+  canvas.addEventListener("mousedown",function(e){
+    drag={x:e.clientX,y:e.clientY,pan:e.shiftKey}; canvas.classList.add("drag");
+  });
+  window.addEventListener("mouseup",function(){ drag=null; canvas.classList.remove("drag"); });
+  window.addEventListener("mousemove",function(e){
+    if(!drag) return;
+    var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    drag.x=e.clientX; drag.y=e.clientY;
+    if (drag.pan){ cam.panX+=dx; cam.panY+=dy; }
+    else {
+      cam.yaw += dx*0.008;
+      cam.pitch += dy*0.008;
+      cam.pitch = Math.max(-1.4, Math.min(1.4, cam.pitch));
+    }
+  });
+  canvas.addEventListener("wheel",function(e){
+    e.preventDefault();
+    cam.dist *= (1 + Math.sign(e.deltaY)*0.08);
+    cam.dist = Math.max(3, Math.min(40, cam.dist));
+  },{passive:false});
+
+  reseed();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

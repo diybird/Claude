@@ -47,6 +47,23 @@ Angle/Max Length, true Bezier/Akima types) is a straightforward next step.
 > Cloners, Include Cloner) are omitted — they depend on Thinking Particles /
 > Cloners / MoGraph, which have no After Effects equivalent.
 
+## Preview window (`preview.html`)
+
+Open `ae-tracer/preview.html` in any browser — no install, no dependencies. It's
+an interactive **3D preview** of the tracer:
+
+- A set of nulls floating in 3D (animated by default). **Drag** to orbit,
+  **wheel** to zoom, **shift-drag** to pan.
+- The connecting spline uses the **same math as the AE path expression**
+  (Linear / Cubic / B-Spline, Close, Points, Tension, Reverse) and is computed
+  in screen space from the camera-projected null positions — i.e. exactly how
+  the AE tool behaves.
+- Controls on the right mirror the TRACER / SPLINE groups so you can dial in a
+  look before building it in After Effects.
+
+Orbit the camera and watch the line stay locked to the nulls — that's the 3D
+linking, demonstrated outside of AE.
+
 ## Use it as a builder (script)
 
 Install: copy `Tracer.jsx` into the **ScriptUI Panels** folder…
