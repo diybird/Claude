@@ -64,8 +64,11 @@
 "    if (e.name.indexOf(\"Trace Link\") === 0){\n" +
 "        try {\n" +
 "            var L = e(\"ADBE Layer Control-0001\");\n" +
-"            // comp-space anchor of the source, mapped into this layer's space\n" +
-"            pts.push(fromComp(L.toComp(L.transform.anchorPoint)));\n" +
+"            // toComp() returns the active-camera SCREEN projection for 3D\n" +
+"            // layers (and plain comp position for 2D). Force 2D so the\n" +
+"            // shape path connects the layers as seen through the camera.\n" +
+"            var sp = L.toComp(L.transform.anchorPoint);\n" +
+"            pts.push(fromComp([sp[0], sp[1]]));\n" +
 "        } catch(err){ /* link set to None / missing -> skip */ }\n" +
 "    }\n" +
 "}\n" +
@@ -212,9 +215,12 @@
         var layer = comp.layers.addShape();
         layer.name = SCRIPT_NAME + " (" + sources.length + ")";
 
-        // No transform fix-up needed: the path expression uses fromComp(),
-        // which maps comp-space points into this layer's space regardless of
-        // its position/anchor.
+        // Keep the tracer 2D: its path is built from the active-camera screen
+        // projection of the (possibly 3D) source layers, so the line tracks
+        // them correctly as the camera moves. A 3D tracer would mis-place the
+        // 2D screen points. No transform fix-up needed: the expression uses
+        // fromComp(), which compensates for this layer's position/anchor.
+        layer.threeDLayer = false;
 
         // Path + stroke
         var contents = layer.property("ADBE Root Vectors Group");

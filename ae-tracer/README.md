@@ -92,11 +92,34 @@ pts.push(fromComp(L.toComp(L.transform.anchorPoint)));
 createPath(V, inTangents, outTangents, isClosed);
 ```
 
+## 3D layers
+
+The tracer **does link 3D nulls/layers**. Each frame it takes every source's
+position and asks AE for its **active-camera screen projection**
+(`L.toComp(L.transform.anchorPoint)`), so the connecting line passes through the
+3D nulls exactly as they appear through the camera — and updates as the camera
+orbits, dollies, or the nulls move in depth.
+
+Things to know:
+
+- The tracer shape layer itself stays **2D on purpose**. A shape-layer path is a
+  flat 2D contour, so the line is drawn in screen space, not as true 3D
+  geometry. It looks correct from the **active camera**; it is not independent
+  3D geometry you can view from a second camera simultaneously or have other 3D
+  layers occlude in depth.
+- It tracks the **active camera** (or the default comp view if there's no
+  camera). Switching cameras re-projects automatically.
+- Works with a mix of 2D and 3D sources in the same tracer.
+
+> Need a **real 3D** connector (actual geometry in 3D space, correct from any
+> camera, depth-sorted)? That can't be done with a 2D shape path — it needs
+> per-segment 3D "beam" layers (oriented 3D solids between consecutive nulls) or
+> a 3D plugin (Plexus, Stardust, etc.). I can add a 3D-beam mode if you want it.
+
 ## Notes / limits
 
 - Layer Controls reference layers **by index**, so reordering layers can shift a
   link; renaming is safe.
-- 3D nulls are projected to 2D (screen position) — intended for 2D line work.
 - Open B-Spline needs **4+ points** for a true curve; fewer falls back to a
   polyline. It approximates (doesn't pass through) control points, by design.
 - Built against the AE ExtendScript API (AE 2020+; Dropdown Menu Control
