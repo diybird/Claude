@@ -37,6 +37,9 @@
 
     var SCRIPT_NAME = "Tracer";
 
+    // 3D Beams options (mirrored from the panel)
+    var beam3D = { thickness: 6, closed: false, color: [0.13, 0.85, 1.0] };
+
     // ----------------------------------------------------------------
     // The live path expression. All behavior is read from the layer's
     // Expression Controls, so this string is identical on every tracer
@@ -112,6 +115,38 @@
 "}\n" +
 "\n" +
 "createPath(V, inT, outT, isClosed);\n";
+
+    // ----------------------------------------------------------------
+    // 3D BEAMS mode — real geometry in 3D space.
+    // A shape-layer path is always a flat 2D contour, so for a true 3D
+    // connection each segment is its own thin 3D solid that spans two
+    // layers. Anchored at its left edge, it is positioned at the "From"
+    // layer, oriented so its local +X points at the "To" layer, and
+    // scaled in X to the world distance between them. Result: real 3D
+    // geometry, correct from any camera and depth-sorted.
+    // Each beam carries two Layer Controls: "From" and "To".
+    // ----------------------------------------------------------------
+    var BEAM_POS_EXPR =
+"// beam start = world position of the From layer\n" +
+"var A = effect(\"From\")(\"ADBE Layer Control-0001\");\n" +
+"A.toWorld([0,0,0]);\n";
+
+    var BEAM_ORI_EXPR =
+"// aim local +X from the From layer toward the To layer (in 3D)\n" +
+"var A = effect(\"From\")(\"ADBE Layer Control-0001\").toWorld([0,0,0]);\n" +
+"var B = effect(\"To\")(\"ADBE Layer Control-0001\").toWorld([0,0,0]);\n" +
+"var d = B - A;\n" +
+"var ry = -radiansToDegrees(Math.atan2(d[2], d[0]));\n" +
+"var rz =  radiansToDegrees(Math.atan2(d[1], Math.sqrt(d[0]*d[0] + d[2]*d[2])));\n" +
+"[0, ry, rz];\n";
+
+    var BEAM_SCALE_EXPR =
+"// stretch in X to the world distance between the two layers\n" +
+"var A = effect(\"From\")(\"ADBE Layer Control-0001\").toWorld([0,0,0]);\n" +
+"var B = effect(\"To\")(\"ADBE Layer Control-0001\").toWorld([0,0,0]);\n" +
+"var L = length(B - A);\n" +
+"[L / thisLayer.width * 100, 100, 100];\n";
+
 
     // ----------------------------------------------------------------
     // Helpers
@@ -324,6 +359,48 @@
         } finally { app.endUndoGroup(); }
     }
 
+    // --- 3D Beams (real geometry) ---
+    function makeBeam(comp, name, fromLayer, toLayer, color, thickness) {
+        var h = Math.max(1, Math.round(thickness));
+        var solid = comp.layers.addSolid(color, name, 100, h, 1);
+        solid.threeDLayer = true;
+        var tg = solid.property("ADBE Transform Group");
+        // anchor at the left-center so the solid grows toward the To layer
+        tg.property("ADBE Anchor Point").setValue([0, h / 2, 0]);
+        addLayerControl(solid, "From", fromLayer.index);
+        addLayerControl(solid, "To", toLayer.index);
+        tg.property("ADBE Position").expression = BEAM_POS_EXPR;
+        tg.property("ADBE Orientation").expression = BEAM_ORI_EXPR;
+        tg.property("ADBE Scale").expression = BEAM_SCALE_EXPR;
+        return solid;
+    }
+
+    function createBeams() {
+        var comp = getActiveComp();
+        if (!comp) { alert("Open a composition first.", SCRIPT_NAME); return; }
+        var sources = selectionSources(comp);
+        if (sources.length < 2) {
+            alert("Select 2+ layers to connect in 3D.", SCRIPT_NAME);
+            return;
+        }
+        app.beginUndoGroup(SCRIPT_NAME + ": Create 3D Beams");
+        try {
+            var made = [];
+            for (var i = 0; i < sources.length - 1; i++) {
+                made.push(makeBeam(comp, "Tracer Beam " + (i + 1),
+                          sources[i], sources[i + 1], beam3D.color, beam3D.thickness));
+            }
+            if (beam3D.closed && sources.length > 2) {
+                made.push(makeBeam(comp, "Tracer Beam " + sources.length,
+                          sources[sources.length - 1], sources[0],
+                          beam3D.color, beam3D.thickness));
+            }
+            for (var j = 0; j < made.length; j++) made[j].selected = true;
+        } catch (e) {
+            alert("3D Beams error: " + errStr(e), SCRIPT_NAME);
+        } finally { app.endUndoGroup(); }
+    }
+
     // ----------------------------------------------------------------
     // UI
     // ----------------------------------------------------------------
@@ -350,11 +427,33 @@
         b3.onClick = reapplyExpression;
         b4.onClick = bake;
 
+        // --- 3D Beams (real geometry) ---
+        var p3d = pal.add("panel", undefined, "3D Beams (real geometry)");
+        p3d.orientation = "column";
+        p3d.alignChildren = ["fill", "top"];
+        p3d.margins = 10;
+        p3d.spacing = 6;
+        var r3 = p3d.add("group");
+        r3.add("statictext", undefined, "Thickness:");
+        var thick = r3.add("edittext", undefined, "6");
+        thick.characters = 4;
+        r3.add("statictext", undefined, "px");
+        var closedCb = r3.add("checkbox", undefined, "Closed loop");
+        var bBeam = p3d.add("button", undefined, "Create 3D Beams from Selection");
+        function syncBeam() {
+            var t = parseFloat(thick.text);
+            beam3D.thickness = isNaN(t) ? 6 : t;
+            beam3D.closed = closedCb.value;
+        }
+        thick.onChange = syncBeam;
+        closedCb.onClick = syncBeam;
+        bBeam.onClick = function () { syncBeam(); createBeams(); };
+
         var hint = pal.add("statictext", undefined,
-            "Create a tracer from 2+ selected layers, then tune it in the\n" +
-            "Effect Controls panel (TRACER / SPLINE groups + Trace Link list).\n" +
-            "To make a reusable preset: select its effects + Path expression,\n" +
-            "then Animation > Save Animation Preset…",
+            "Shape tracer = flat 2D path (best from one camera).\n" +
+            "3D Beams = real geometry connecting layers in 3D space.\n" +
+            "Preset: select a tracer's effects + Path expr, then\n" +
+            "Animation > Save Animation Preset…",
             { multiline: true });
         hint.preferredSize.height = 64;
 

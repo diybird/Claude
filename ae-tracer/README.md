@@ -128,10 +128,37 @@ Things to know:
   camera). Switching cameras re-projects automatically.
 - Works with a mix of 2D and 3D sources in the same tracer.
 
-> Need a **real 3D** connector (actual geometry in 3D space, correct from any
-> camera, depth-sorted)? That can't be done with a 2D shape path — it needs
-> per-segment 3D "beam" layers (oriented 3D solids between consecutive nulls) or
-> a 3D plugin (Plexus, Stardust, etc.). I can add a 3D-beam mode if you want it.
+### 3D Beams mode — real 3D geometry
+
+For a connection that lives in **actual 3D space** (correct from any camera,
+depth-sorted, not a flat screen line), use **Create 3D Beams from Selection**.
+
+Instead of one 2D shape path, it builds **one thin 3D solid per segment**. Each
+beam is anchored at its left edge and driven by expressions:
+
+```js
+// Position — start at the "From" layer's world position
+effect("From")("ADBE Layer Control-0001").toWorld([0,0,0]);
+
+// Orientation — aim local +X at the "To" layer
+var d = B - A;                                  // world delta
+[0, -radiansToDegrees(atan2(d[2],d[0])),
+    radiansToDegrees(atan2(d[1], length(d.xz)))];
+
+// Scale — stretch X to the world distance
+[ length(B - A) / thisLayer.width * 100, 100, 100 ];
+```
+
+Each beam carries **From** / **To** Layer Controls (editable in Effect Controls),
+so you can repoint segments without rebuilding. Options in the panel:
+
+- **Thickness** — solid height in px (the beam's cross-section).
+- **Closed loop** — adds a final beam from the last layer back to the first.
+
+Trade-offs vs. the shape path: real 3D, but it's flat-plane geometry (a thin
+solid), so a beam viewed exactly edge-on gets thin/invisible. For thick tube-like
+3D lines you'd extrude shapes in the CINEMA 4D renderer or use a plugin (Plexus,
+Stardust); say the word and I can add an extruded-shape variant.
 
 ## Notes / limits
 
