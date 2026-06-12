@@ -155,6 +155,25 @@ so you can repoint segments without rebuilding. Options in the panel:
 - **Thickness** — solid height in px (the beam's cross-section).
 - **Closed loop** — adds a final beam from the last layer back to the first.
 
+#### Curved beams (3D spline)
+
+Enable **Curved** to lay the beams along a **3D Catmull-Rom spline** through the
+layers instead of straight chords — a smooth curve in real 3D. It builds one
+controller null (**Tracer 3D Curve**) holding the `Trace Link` list plus
+`Samples`, `Tension`, and `Closed Loop`, and `Segs/span × spans` short beams that
+each evaluate the spline:
+
+```js
+// each beam reads the live control points from the controller, then:
+A = evalU(i / M);   B = evalU((i + 1) / M);   // its two ends on the curve
+// evalU() = uniform Catmull-Rom through the control points (Tension drives it)
+```
+
+- **Segs/span** — beams per span between consecutive layers (higher = smoother).
+- **Tension** — curve tightness (≈0.5 ≈ standard Catmull-Rom).
+- Editing the controller's `Trace Link` layers reshapes the curve live; changing
+  `Segs/span` requires a rebuild (beam count is fixed at build time).
+
 Trade-offs vs. the shape path: real 3D, but it's flat-plane geometry (a thin
 solid), so a beam viewed exactly edge-on gets thin/invisible. For thick tube-like
 3D lines you'd extrude shapes in the CINEMA 4D renderer or use a plugin (Plexus,

@@ -38,7 +38,8 @@
     var SCRIPT_NAME = "Tracer";
 
     // 3D Beams options (mirrored from the panel)
-    var beam3D = { thickness: 6, closed: false, color: [0.13, 0.85, 1.0] };
+    var beam3D = { thickness: 6, closed: false, color: [0.13, 0.85, 1.0],
+                   curved: false, res: 8, tension: 0.5 };
 
     // ----------------------------------------------------------------
     // The live path expression. All behavior is read from the layer's
@@ -146,6 +147,62 @@
 "var B = effect(\"To\")(\"ADBE Layer Control-0001\").toWorld([0,0,0]);\n" +
 "var L = length(B - A);\n" +
 "[L / thisLayer.width * 100, 100, 100];\n";
+
+    // ----------------------------------------------------------------
+    // CURVED 3D beams. The segments are laid along a 3D Catmull-Rom spline
+    // through the source layers, so the chain of beams reads as a smooth
+    // curve in 3D. Each beam reads the control points live from a single
+    // controller null (its "Trace Link" list) and owns a "Sample" index;
+    // it evaluates the spline at u=i/M and u=(i+1)/M for its two ends.
+    // ----------------------------------------------------------------
+    var BEAM_CURVE_CORE =
+"var C = effect(\"Curve\")(\"ADBE Layer Control-0001\");\n" +
+"var Cfx = C(\"ADBE Effect Parade\");\n" +
+"var P = [];\n" +
+"for (var k = 1; k <= Cfx.numProperties; k++){\n" +
+"    var e = Cfx(k);\n" +
+"    if (e.name.indexOf(\"Trace Link\") === 0){\n" +
+"        try { P.push(e(\"ADBE Layer Control-0001\").toWorld([0,0,0])); } catch(err){}\n" +
+"    }\n" +
+"}\n" +
+"var n = P.length;\n" +
+"var M = Math.max(1, Math.round(C.effect(\"Samples\")(\"ADBE Slider Control-0001\")));\n" +
+"var s = C.effect(\"Tension\")(\"ADBE Slider Control-0001\");\n" +
+"var closed = C.effect(\"Closed Loop\")(\"ADBE Checkbox Control-0001\") > 0;\n" +
+"var i = Math.round(effect(\"Sample\")(\"ADBE Slider Control-0001\"));\n" +
+"function idx(a){ return closed ? ((a % n) + n) % n : Math.max(0, Math.min(n-1, a)); }\n" +
+"function CR(p0,p1,p2,p3,t){\n" +
+"    var t2 = t*t, t3 = t2*t;\n" +
+"    var m1 = (p2 - p0) * s;\n" +
+"    var m2 = (p3 - p1) * s;\n" +
+"    var a = p1*2 - p2*2 + m1 + m2;\n" +
+"    var b = p1*(-3) + p2*3 - m1*2 - m2;\n" +
+"    return a*t3 + b*t2 + m1*t + p1;\n" +
+"}\n" +
+"function evalU(u){\n" +
+"    var spanCount = closed ? n : (n - 1);\n" +
+"    if (spanCount < 1) spanCount = 1;\n" +
+"    var f = u * spanCount;\n" +
+"    var jr = Math.floor(f);\n" +
+"    if (!closed && jr > n - 2) jr = n - 2;\n" +
+"    if (jr < 0) jr = 0;\n" +
+"    var lt = f - jr;\n" +
+"    return CR(P[idx(jr-1)], P[idx(jr)], P[idx(jr+1)], P[idx(jr+2)], lt);\n" +
+"}\n" +
+"var A, B;\n" +
+"if (n < 2){ A = [0,0,0]; B = [0,0,0]; }\n" +
+"else { A = evalU(i / M); B = evalU((i + 1) / M); }\n";
+
+    var BEAM_CURVE_POS = BEAM_CURVE_CORE + "A;\n";
+    var BEAM_CURVE_ORI = BEAM_CURVE_CORE +
+"var d = B - A;\n" +
+"var ry = -radiansToDegrees(Math.atan2(d[2], d[0]));\n" +
+"var rz =  radiansToDegrees(Math.atan2(d[1], Math.sqrt(d[0]*d[0] + d[2]*d[2])));\n" +
+"[0, ry, rz];\n";
+    var BEAM_CURVE_SCALE = BEAM_CURVE_CORE +
+"var L = length(B - A);\n" +
+"[L / thisLayer.width * 100, 100, 100];\n";
+
 
 
     // ----------------------------------------------------------------
@@ -375,6 +432,22 @@
         return solid;
     }
 
+    // Curved beams: one solid per spline sub-segment, reading control points
+    // from a shared controller null.
+    function makeCurvedBeam(comp, name, controller, sampleIndex, color, thickness) {
+        var h = Math.max(1, Math.round(thickness));
+        var solid = comp.layers.addSolid(color, name, 100, h, 1);
+        solid.threeDLayer = true;
+        var tg = solid.property("ADBE Transform Group");
+        tg.property("ADBE Anchor Point").setValue([0, h / 2, 0]);
+        addLayerControl(solid, "Curve", controller.index);
+        addSlider(solid, "Sample", sampleIndex);
+        tg.property("ADBE Position").expression = BEAM_CURVE_POS;
+        tg.property("ADBE Orientation").expression = BEAM_CURVE_ORI;
+        tg.property("ADBE Scale").expression = BEAM_CURVE_SCALE;
+        return solid;
+    }
+
     function createBeams() {
         var comp = getActiveComp();
         if (!comp) { alert("Open a composition first.", SCRIPT_NAME); return; }
@@ -385,15 +458,35 @@
         }
         app.beginUndoGroup(SCRIPT_NAME + ": Create 3D Beams");
         try {
-            var made = [];
-            for (var i = 0; i < sources.length - 1; i++) {
-                made.push(makeBeam(comp, "Tracer Beam " + (i + 1),
-                          sources[i], sources[i + 1], beam3D.color, beam3D.thickness));
-            }
-            if (beam3D.closed && sources.length > 2) {
-                made.push(makeBeam(comp, "Tracer Beam " + sources.length,
-                          sources[sources.length - 1], sources[0],
-                          beam3D.color, beam3D.thickness));
+            var made = [], i;
+            if (beam3D.curved) {
+                // shared controller null holds the control-point list + options
+                var controller = comp.layers.addNull();
+                controller.name = "Tracer 3D Curve";
+                controller.threeDLayer = true;
+                for (i = 0; i < sources.length; i++) {
+                    addLayerControl(controller, "Trace Link " + (i + 1), sources[i].index);
+                }
+                var res = Math.max(1, Math.round(beam3D.res));
+                var span = beam3D.closed ? sources.length : (sources.length - 1);
+                var M = Math.max(1, span * res);
+                addSlider(controller, "Samples", M);
+                addSlider(controller, "Tension", beam3D.tension);
+                addCheckbox(controller, "Closed Loop", beam3D.closed);
+                for (i = 0; i < M; i++) {
+                    made.push(makeCurvedBeam(comp, "Tracer Beam " + (i + 1),
+                              controller, i, beam3D.color, beam3D.thickness));
+                }
+            } else {
+                for (i = 0; i < sources.length - 1; i++) {
+                    made.push(makeBeam(comp, "Tracer Beam " + (i + 1),
+                              sources[i], sources[i + 1], beam3D.color, beam3D.thickness));
+                }
+                if (beam3D.closed && sources.length > 2) {
+                    made.push(makeBeam(comp, "Tracer Beam " + sources.length,
+                              sources[sources.length - 1], sources[0],
+                              beam3D.color, beam3D.thickness));
+                }
             }
             for (var j = 0; j < made.length; j++) made[j].selected = true;
         } catch (e) {
@@ -439,14 +532,29 @@
         thick.characters = 4;
         r3.add("statictext", undefined, "px");
         var closedCb = r3.add("checkbox", undefined, "Closed loop");
+
+        var r3b = p3d.add("group");
+        var curvedCb = r3b.add("checkbox", undefined, "Curved");
+        r3b.add("statictext", undefined, "Segs/span:");
+        var segs = r3b.add("edittext", undefined, "8");
+        segs.characters = 3;
+        r3b.add("statictext", undefined, "Tension:");
+        var tens = r3b.add("edittext", undefined, "0.5");
+        tens.characters = 4;
+
         var bBeam = p3d.add("button", undefined, "Create 3D Beams from Selection");
         function syncBeam() {
-            var t = parseFloat(thick.text);
-            beam3D.thickness = isNaN(t) ? 6 : t;
+            var t = parseFloat(thick.text);   beam3D.thickness = isNaN(t) ? 6 : t;
+            var r = parseFloat(segs.text);     beam3D.res = isNaN(r) ? 8 : r;
+            var n = parseFloat(tens.text);     beam3D.tension = isNaN(n) ? 0.5 : n;
             beam3D.closed = closedCb.value;
+            beam3D.curved = curvedCb.value;
         }
         thick.onChange = syncBeam;
         closedCb.onClick = syncBeam;
+        curvedCb.onClick = syncBeam;
+        segs.onChange = syncBeam;
+        tens.onChange = syncBeam;
         bBeam.onClick = function () { syncBeam(); createBeams(); };
 
         var hint = pal.add("statictext", undefined,
