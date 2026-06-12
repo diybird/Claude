@@ -118,6 +118,13 @@
         return (c && c instanceof CompItem) ? c : null;
     }
 
+    // Format a caught error with its source line for precise diagnosis.
+    function errStr(e) {
+        var s = e.toString();
+        if (e.line) s += "  (line " + e.line + ")";
+        return s;
+    }
+
     function isTracerLayer(layer) {
         if (!(layer instanceof ShapeLayer)) return false;
         try {
@@ -154,12 +161,19 @@
         return e;
     }
     function addDropdown(layer, name, items, idx) {
-        var e = fxParade(layer).addProperty("ADBE Dropdown Control");
-        e.name = name;
-        var menu = e.property("ADBE Dropdown Control-0001");
-        menu = menu.setPropertyParameters(items); // must use returned ref
-        try { menu.setValue(idx); } catch (err) {}
-        return e;
+        var fx = fxParade(layer), e;
+        try {
+            e = fx.addProperty("ADBE Dropdown Control");
+            e.name = name;
+            var menu = e.property("ADBE Dropdown Control-0001") || e.property(1);
+            menu = menu.setPropertyParameters(items); // returns the live ref
+            menu.setValue(idx);
+            return e;
+        } catch (err) {
+            // AE older than 17.0.1 (no Dropdown Menu Control) -> Slider fallback.
+            try { if (e) e.remove(); } catch (e2) {}
+            return addSlider(layer, name, idx);
+        }
     }
     function addLayerControl(layer, name, srcIndex) {
         var e = fxParade(layer).addProperty("ADBE Layer Control");
@@ -198,9 +212,9 @@
         var layer = comp.layers.addShape();
         layer.name = SCRIPT_NAME + " (" + sources.length + ")";
 
-        // Neutralize transform so comp/layer space line up for fromComp().
-        layer.transform.position.setValue([0, 0]);
-        layer.transform.anchorPoint.setValue([0, 0]);
+        // No transform fix-up needed: the path expression uses fromComp(),
+        // which maps comp-space points into this layer's space regardless of
+        // its position/anchor.
 
         // Path + stroke
         var contents = layer.property("ADBE Root Vectors Group");
@@ -252,7 +266,7 @@
             var layer = createTracerLayer(comp, sources);
             layer.selected = true;
         } catch (e) {
-            alert("Tracer error: " + e.toString(), SCRIPT_NAME);
+            alert("Tracer error: " + errStr(e), SCRIPT_NAME);
         } finally { app.endUndoGroup(); }
     }
 
@@ -270,7 +284,7 @@
                 addLayerControl(tracer, "Trace Link " + (num + i), sources[i].index);
             }
         } catch (e) {
-            alert("Add Links error: " + e.toString(), SCRIPT_NAME);
+            alert("Add Links error: " + errStr(e), SCRIPT_NAME);
         } finally { app.endUndoGroup(); }
     }
 
@@ -281,7 +295,7 @@
         if (!tracer) { alert("Select a Tracer layer.", SCRIPT_NAME); return; }
         app.beginUndoGroup(SCRIPT_NAME + ": Re-apply Expression");
         try { getTracerPathProp(tracer).expression = PATH_EXPRESSION; }
-        catch (e) { alert("Error: " + e.toString(), SCRIPT_NAME); }
+        catch (e) { alert("Error: " + errStr(e), SCRIPT_NAME); }
         finally { app.endUndoGroup(); }
     }
 
@@ -300,7 +314,7 @@
             p.expression = "";
             p.expressionEnabled = false;
         } catch (e) {
-            alert("Bake error: " + e.toString(), SCRIPT_NAME);
+            alert("Bake error: " + errStr(e), SCRIPT_NAME);
         } finally { app.endUndoGroup(); }
     }
 
