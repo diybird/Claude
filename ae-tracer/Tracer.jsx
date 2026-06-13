@@ -39,7 +39,7 @@
 
     // 3D Beams options (mirrored from the panel)
     var beam3D = { thickness: 6, closed: false, color: [0.13, 0.85, 1.0],
-                   curved: false, res: 8, tension: 0.5 };
+                   curved: false, segments: 16, tension: 0.5 };
 
     // ----------------------------------------------------------------
     // The live path expression. All behavior is read from the layer's
@@ -149,14 +149,21 @@
 "[L / thisLayer.width * 100, 100, 100];\n";
 
     // ----------------------------------------------------------------
-    // CURVED 3D beams. The segments are laid along a 3D Catmull-Rom spline
-    // through the source layers, so the chain of beams reads as a smooth
-    // curve in 3D. Each beam reads the control points live from a single
-    // controller null (its "Trace Link" list) and owns a "Sample" index;
-    // it evaluates the spline at u=i/M and u=(i+1)/M for its two ends.
+    // CURVED 3D beams (optimized). Segments are laid along a 3D Catmull-Rom
+    // spline through the source layers, reading control points live from a
+    // single controller null. To keep it light:
+    //   • Position evaluates the spline once (its start point).
+    //   • Orientation/Scale just read THIS beam's position and the NEXT
+    //     beam's position (a cheap lookup) — only the final beam, which has
+    //     no next sibling, re-evaluates the spline end point.
+    // Layer count is set by a single "Samples" total, not per-span.
     // ----------------------------------------------------------------
-    var BEAM_CURVE_CORE =
+    var BEAM_CURVE_POS =
 "var C = effect(\"Curve\")(\"ADBE Layer Control-0001\");\n" +
+"var i = Math.round(effect(\"Sample\")(\"ADBE Slider Control-0001\"));\n" +
+"var M = Math.max(1, Math.round(C.effect(\"Samples\")(\"ADBE Slider Control-0001\")));\n" +
+"var s = C.effect(\"Tension\")(\"ADBE Slider Control-0001\");\n" +
+"var closed = C.effect(\"Closed Loop\")(\"ADBE Checkbox Control-0001\") > 0;\n" +
 "var Cfx = C(\"ADBE Effect Parade\");\n" +
 "var P = [];\n" +
 "for (var k = 1; k <= Cfx.numProperties; k++){\n" +
@@ -166,42 +173,60 @@
 "    }\n" +
 "}\n" +
 "var n = P.length;\n" +
-"var M = Math.max(1, Math.round(C.effect(\"Samples\")(\"ADBE Slider Control-0001\")));\n" +
-"var s = C.effect(\"Tension\")(\"ADBE Slider Control-0001\");\n" +
-"var closed = C.effect(\"Closed Loop\")(\"ADBE Checkbox Control-0001\") > 0;\n" +
-"var i = Math.round(effect(\"Sample\")(\"ADBE Slider Control-0001\"));\n" +
-"function idx(a){ return closed ? ((a % n) + n) % n : Math.max(0, Math.min(n-1, a)); }\n" +
-"function CR(p0,p1,p2,p3,t){\n" +
-"    var t2 = t*t, t3 = t2*t;\n" +
-"    var m1 = (p2 - p0) * s;\n" +
-"    var m2 = (p3 - p1) * s;\n" +
-"    var a = p1*2 - p2*2 + m1 + m2;\n" +
-"    var b = p1*(-3) + p2*3 - m1*2 - m2;\n" +
-"    return a*t3 + b*t2 + m1*t + p1;\n" +
-"}\n" +
-"function evalU(u){\n" +
-"    var spanCount = closed ? n : (n - 1);\n" +
-"    if (spanCount < 1) spanCount = 1;\n" +
-"    var f = u * spanCount;\n" +
-"    var jr = Math.floor(f);\n" +
-"    if (!closed && jr > n - 2) jr = n - 2;\n" +
-"    if (jr < 0) jr = 0;\n" +
-"    var lt = f - jr;\n" +
-"    return CR(P[idx(jr-1)], P[idx(jr)], P[idx(jr+1)], P[idx(jr+2)], lt);\n" +
-"}\n" +
-"var A, B;\n" +
-"if (n < 2){ A = [0,0,0]; B = [0,0,0]; }\n" +
-"else { A = evalU(i / M); B = evalU((i + 1) / M); }\n";
+"var idx = function(a){ return closed ? ((a % n) + n) % n : Math.max(0, Math.min(n-1, a)); };\n" +
+"var evalU = function(u){\n" +
+"    var spanCount = closed ? n : (n - 1); if (spanCount < 1) spanCount = 1;\n" +
+"    var f = u * spanCount; var jr = Math.floor(f);\n" +
+"    if (!closed && jr > n - 2) jr = n - 2; if (jr < 0) jr = 0; var lt = f - jr;\n" +
+"    var p0=P[idx(jr-1)], p1=P[idx(jr)], p2=P[idx(jr+1)], p3=P[idx(jr+2)];\n" +
+"    var t2=lt*lt, t3=t2*lt; var m1=(p2-p0)*s, m2=(p3-p1)*s;\n" +
+"    var a=p1*2-p2*2+m1+m2, b=p1*(-3)+p2*3-m1*2-m2;\n" +
+"    return a*t3 + b*t2 + m1*lt + p1;\n" +
+"};\n" +
+"(n < 2) ? [0,0,0] : evalU(i / M);\n";
 
-    var BEAM_CURVE_POS = BEAM_CURVE_CORE + "A;\n";
-    var BEAM_CURVE_ORI = BEAM_CURVE_CORE +
+    // Fallback used only by the LAST beam to compute its end point B.
+    var BEAM_B_FALLBACK =
+"    var s = C.effect(\"Tension\")(\"ADBE Slider Control-0001\");\n" +
+"    var closed = C.effect(\"Closed Loop\")(\"ADBE Checkbox Control-0001\") > 0;\n" +
+"    var Cfx = C(\"ADBE Effect Parade\");\n" +
+"    var P = [];\n" +
+"    for (var k = 1; k <= Cfx.numProperties; k++){\n" +
+"        var e = Cfx(k);\n" +
+"        if (e.name.indexOf(\"Trace Link\") === 0){\n" +
+"            try { P.push(e(\"ADBE Layer Control-0001\").toWorld([0,0,0])); } catch(err){}\n" +
+"        }\n" +
+"    }\n" +
+"    var n = P.length;\n" +
+"    var idx = function(a){ return closed ? ((a % n) + n) % n : Math.max(0, Math.min(n-1, a)); };\n" +
+"    var u = (i + 1) / M;\n" +
+"    var spanCount = closed ? n : (n - 1); if (spanCount < 1) spanCount = 1;\n" +
+"    var f = u * spanCount; var jr = Math.floor(f);\n" +
+"    if (!closed && jr > n - 2) jr = n - 2; if (jr < 0) jr = 0; var lt = f - jr;\n" +
+"    var p0=P[idx(jr-1)], p1=P[idx(jr)], p2=P[idx(jr+1)], p3=P[idx(jr+2)];\n" +
+"    var t2=lt*lt, t3=t2*lt; var m1=(p2-p0)*s, m2=(p3-p1)*s;\n" +
+"    var aa=p1*2-p2*2+m1+m2, bb=p1*(-3)+p2*3-m1*2-m2;\n" +
+"    B = aa*t3 + bb*t2 + m1*lt + p1;\n";
+
+    var BEAM_CURVE_HEAD =
+"var A = position;\n" +
+"var i = Math.round(effect(\"Sample\")(\"ADBE Slider Control-0001\"));\n" +
+"var C = effect(\"Curve\")(\"ADBE Layer Control-0001\");\n" +
+"var M = Math.max(1, Math.round(C.effect(\"Samples\")(\"ADBE Slider Control-0001\")));\n" +
+"var B = null;\n" +
+"try { B = thisComp.layer(\"Tracer Beam \" + (i + 2)).transform.position; } catch(e0){}\n" +
+"if (B === null){\n" + BEAM_B_FALLBACK + "}\n";
+
+    var BEAM_CURVE_ORI = BEAM_CURVE_HEAD +
 "var d = B - A;\n" +
 "var ry = -radiansToDegrees(Math.atan2(d[2], d[0]));\n" +
 "var rz =  radiansToDegrees(Math.atan2(d[1], Math.sqrt(d[0]*d[0] + d[2]*d[2])));\n" +
 "[0, ry, rz];\n";
-    var BEAM_CURVE_SCALE = BEAM_CURVE_CORE +
+
+    var BEAM_CURVE_SCALE = BEAM_CURVE_HEAD +
 "var L = length(B - A);\n" +
 "[L / thisLayer.width * 100, 100, 100];\n";
+
 
 
 
@@ -467,9 +492,8 @@
                 for (i = 0; i < sources.length; i++) {
                     addLayerControl(controller, "Trace Link " + (i + 1), sources[i].index);
                 }
-                var res = Math.max(1, Math.round(beam3D.res));
-                var span = beam3D.closed ? sources.length : (sources.length - 1);
-                var M = Math.max(1, span * res);
+                // Total beam count (decoupled from null count for performance)
+                var M = Math.max(2, Math.round(beam3D.segments));
                 addSlider(controller, "Samples", M);
                 addSlider(controller, "Tension", beam3D.tension);
                 addCheckbox(controller, "Closed Loop", beam3D.closed);
@@ -535,8 +559,8 @@
 
         var r3b = p3d.add("group");
         var curvedCb = r3b.add("checkbox", undefined, "Curved");
-        r3b.add("statictext", undefined, "Segs/span:");
-        var segs = r3b.add("edittext", undefined, "8");
+        r3b.add("statictext", undefined, "Segments:");
+        var segs = r3b.add("edittext", undefined, "16");
         segs.characters = 3;
         r3b.add("statictext", undefined, "Tension:");
         var tens = r3b.add("edittext", undefined, "0.5");
@@ -545,7 +569,7 @@
         var bBeam = p3d.add("button", undefined, "Create 3D Beams from Selection");
         function syncBeam() {
             var t = parseFloat(thick.text);   beam3D.thickness = isNaN(t) ? 6 : t;
-            var r = parseFloat(segs.text);     beam3D.res = isNaN(r) ? 8 : r;
+            var r = parseFloat(segs.text);     beam3D.segments = isNaN(r) ? 16 : r;
             var n = parseFloat(tens.text);     beam3D.tension = isNaN(n) ? 0.5 : n;
             beam3D.closed = closedCb.value;
             beam3D.curved = curvedCb.value;

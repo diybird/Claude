@@ -169,10 +169,18 @@ A = evalU(i / M);   B = evalU((i + 1) / M);   // its two ends on the curve
 // evalU() = uniform Catmull-Rom through the control points (Tension drives it)
 ```
 
-- **Segs/span** — beams per span between consecutive layers (higher = smoother).
+- **Segments** — *total* beams for the whole curve (not per span), so the layer
+  count is predictable and independent of how many nulls you have. Lower it
+  (e.g. 10–16) for performance; raise it for a smoother curve.
 - **Tension** — curve tightness (≈0.5 ≈ standard Catmull-Rom).
 - Editing the controller's `Trace Link` layers reshapes the curve live; changing
-  `Segs/span` requires a rebuild (beam count is fixed at build time).
+  `Segments` requires a rebuild (beam count is fixed at build time).
+
+**Performance:** the expressions are optimized so each beam evaluates the spline
+**once** (for its Position). Orientation and Scale just read this beam's position
+and the next beam's position — an exact, cheap lookup — so only the final beam
+re-evaluates the curve. If it's still heavy, lower **Segments**: with this build
+the layer count equals Segments regardless of null count.
 
 Trade-offs vs. the shape path: real 3D, but it's flat-plane geometry (a thin
 solid), so a beam viewed exactly edge-on gets thin/invisible. For thick tube-like
